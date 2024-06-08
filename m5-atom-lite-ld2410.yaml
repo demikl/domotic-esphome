@@ -40,6 +40,17 @@ button:
           address: 0x05
           command: 0x0B
 
+number:
+  - platform: template
+    id: display_luminosity
+    name: luminosité de l'afficheur 7 segments
+    restore_value: yes
+    initial_value: 0
+    optimistic: yes
+    min_value: 0
+    max_value: 7
+    step: 1
+
 time:
   - platform: homeassistant
     id: homeassistant_time
@@ -58,3 +69,4 @@ display:
         it.strftime("%H.%M", id(homeassistant_time).now());
       else
         it.strftime("%H%M", id(homeassistant_time).now());
+      it.set_intensity(id(display_luminosity).state);
