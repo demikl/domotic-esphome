@@ -65,8 +65,14 @@ display:
   lambda: |-
       static int i = 0;
       i++;
-      if ((i % 2) == 0)
-        it.strftime("%H.%M", id(homeassistant_time).now());
-      else
-        it.strftime("%H%M", id(homeassistant_time).now());
-      it.set_intensity(id(display_luminosity).state);
+      if (id(has_moving_target).state)
+      {
+        it.set_on(true);
+        if ((i % 2) == 0)
+          it.strftime("%H.%M", id(homeassistant_time).now());
+        else
+          it.strftime("%H%M", id(homeassistant_time).now());
+        it.set_intensity(id(display_luminosity).state);
+      } else {
+        it.set_on(false);
+      }

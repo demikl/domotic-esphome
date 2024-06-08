@@ -25,6 +25,7 @@ binary_sensor:
       name: Presence
     has_moving_target:
       name: Moving Target
+      id: has_moving_target
     has_still_target:
       name: Still Target
     out_pin_presence_status:
