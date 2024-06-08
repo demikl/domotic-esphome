@@ -1,0 +1,14 @@
+binary_sensor:
+  # au moins un capteur de mouvement actif
+  - platform: homeassistant
+    name: "Any Motion Sensor From Home Assistant"
+    entity_id: binary_sensor.any_motion_sensor
+    id: any_motion_sensor
+    internal: true
+
+  # au moins un capteur d'ouverture actif
+  - platform: homeassistant
+    name: "Any Opening Sensor From Home Assistant"
+    entity_id: binary_sensor.any_opening_sensor
+    id: any_opening_sensor
+    internal: true

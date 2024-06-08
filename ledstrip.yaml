@@ -1,0 +1,110 @@
+substitutions:
+  devicename: ledstrip
+  upper_devicename: Bureau
+  light_id_alarme: ledstrip_bureau
+  buzzer_pwm: D6
+  buzzer_platform: esp8266_pwm
+  bme280_i2c_sda: D2
+  bme280_i2c_scl: D1
+
+packages:
+  device_base: !include common/device_base.yaml
+  device_esp32: !include common/device_esp8266.yaml
+  alarme: !include common/sensors_alarme.yaml
+  buzzer: !include common/buzzer.yaml
+  bme280: !include common/bme280.yaml
+
+esphome:
+  name: ${devicename}
+  friendly_name: ${upper_devicename}
+
+esp8266:
+  board: nodemcuv2
+
+wifi:
+  manual_ip:
+    static_ip: 192.168.1.200
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+# Enable logging
+# Set logger to NOT default pins because we are using RX and TX for driving LEDs
+logger:
+  baud_rate: 0
+  hardware_uart: uart1
+
+light:
+  - platform: neopixelbus
+    #internal: true
+    name: "FastLED SPI Light"
+    id: ledstrip_bureau
+    type: RGB
+    variant: P9813
+    num_leds: 2
+    data_pin: D7  # GPIO13 preferred for neopixelbus on ESP8266
+    clock_pin: D5  # GPIO14 required for neopixelbus on ESP8266
+    # method:
+    #   type: spi
+    #   speed: 0.500MHz
+    # gamma_correct: 1.8
+   # color_correct: [100%, 68%, 46%]
+  #   effects:
+  #     - <<: !include common/light_effect_alarme.yaml
+  #     - pulse:
+  #     - addressable_rainbow:
+  #     - flicker:
+  #     - flicker:
+  #         name: Flicker more deviant
+  #         alpha: 60%
+  #     - flicker:
+  #         name: Flicker more intense and deviant
+  #         intensity: 20%
+  #         alpha: 60%
+  #     - random:
+  #     - addressable_twinkle:
+  #     - addressable_random_twinkle:
+  #     - addressable_fireworks:
+  #     - addressable_fireworks:
+  #         name: Fireworks Effect With Random Colors
+  #         use_random_color: true
+  #     - addressable_fireworks:
+  #         name: Very slow Fireworks Effect With Random Colors
+  #         use_random_color: true
+  #         spark_probability: 20%
+  #         fade_out_rate: 90
+  #     - addressable_flicker:
+  #     - addressable_flicker:
+  #         name: Addressable Flicker more intense
+  #         intensity: 60%
+  #     - addressable_color_wipe:
+  #     - addressable_color_wipe:
+  #         name: Color Wipe Effect With Custom Values
+  #         add_led_interval: 1s
+  #     - addressable_lambda:
+  #         name: "Fireplace simple"
+  #         update_interval: 30ms
+  #         lambda: |-
+  #           // it.size() - Number of LEDs
+  #           // it[num] - Access the LED at index num.
+  #           // Set the LED at num to the given r, g, b values
+  #           // it[num] = ESPColor(r, g, b);
+  #           // Get the color at index num (ESPColor instance)
+  #           // it[num].get();
+
+  #           it[0] = ESPHSVColor(30 + random_uint32() % 30, 255, 135 + random_uint32() % 120).to_rgb();
+  #           it[1] = ESPHSVColor(random_uint32() % 30, 255, 135 + random_uint32() % 120).to_rgb();
+  #           it[2] = ESPHSVColor(42, 255, 135 + random_uint32() % 120).to_rgb();
+
+  # - platform: partition
+  #   name: "porte bas"
+  #   segments:
+  #     - id: ledstrip_bureau
+  #       from: 0
+  #       to: 0
+
+  # - platform: partition
+  #   name: "porte haut"
+  #   segments:
+  #     - id: ledstrip_bureau
+  #       from: 1
+  #       to: 1

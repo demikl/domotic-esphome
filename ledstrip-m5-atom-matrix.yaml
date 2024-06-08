@@ -1,0 +1,113 @@
+substitutions:
+  devicename: ledstrip-matrix
+  upper_devicename: Bureau-matrix
+
+packages:
+  device_base: !include common/device_base.yaml
+  device_esp32: !include common/device_esp32.yaml
+
+esphome:
+  name_add_mac_suffix: true
+
+esp32:
+  board: pico32
+
+wifi:
+  manual_ip:
+    static_ip: 192.168.1.206
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO39
+      inverted: true
+    name: ${upper_devicename} Button
+
+light:
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: GPIO27
+    num_leds: 25
+    rgb_order: GRB
+    name: ${upper_devicename} Led Matrix
+    id: matrix
+    color_correct: [40%, 40%, 40%]
+    effects:
+      - addressable_rainbow:
+      - addressable_color_wipe:
+      - addressable_scan:
+      - addressable_twinkle:
+      - addressable_random_twinkle:
+      - addressable_fireworks:
+
+  - platform: fastled_spi
+    id: ledstrip_p9813
+    name: ledstrip
+    chipset: P9813
+    data_pin: GPIO25
+    clock_pin: GPIO21
+    data_rate: 500kHz
+    num_leds: 2
+    rgb_order: RGB
+  #   effects:
+  #     - <<: !include common/light_effect_alarme.yaml
+  #     - pulse:
+  #     - addressable_rainbow:
+  #     - flicker:
+  #     - flicker:
+  #         name: Flicker more deviant
+  #         alpha: 60%
+  #     - flicker:
+  #         name: Flicker more intense and deviant
+  #         intensity: 20%
+  #         alpha: 60%
+  #     - random:
+  #     - addressable_twinkle:
+  #     - addressable_random_twinkle:
+  #     - addressable_fireworks:
+  #     - addressable_fireworks:
+  #         name: Fireworks Effect With Random Colors
+  #         use_random_color: true
+  #     - addressable_fireworks:
+  #         name: Very slow Fireworks Effect With Random Colors
+  #         use_random_color: true
+  #         spark_probability: 20%
+  #         fade_out_rate: 90
+  #     - addressable_flicker:
+  #     - addressable_flicker:
+  #         name: Addressable Flicker more intense
+  #         intensity: 60%
+  #     - addressable_color_wipe:
+  #     - addressable_color_wipe:
+  #         name: Color Wipe Effect With Custom Values
+  #         add_led_interval: 1s
+  #     - addressable_lambda:
+  #         name: "Fireplace simple"
+  #         update_interval: 30ms
+  #         lambda: |-
+  #           // it.size() - Number of LEDs
+  #           // it[num] - Access the LED at index num.
+  #           // Set the LED at num to the given r, g, b values
+  #           // it[num] = ESPColor(r, g, b);
+  #           // Get the color at index num (ESPColor instance)
+  #           // it[num].get();
+
+  #           it[0] = ESPHSVColor(30 + random_uint32() % 30, 255, 135 + random_uint32() % 120).to_rgb();
+  #           it[1] = ESPHSVColor(random_uint32() % 30, 255, 135 + random_uint32() % 120).to_rgb();
+  #           it[2] = ESPHSVColor(42, 255, 135 + random_uint32() % 120).to_rgb();
+
+  - platform: partition
+    name: "porte bas"
+    segments:
+      - id: ledstrip_p9813
+        from: 0
+        to: 0
+
+  - platform: partition
+    name: "porte haut"
+    segments:
+      - id: ledstrip_p9813
+        from: 1
+        to: 1

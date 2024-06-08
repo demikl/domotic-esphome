@@ -1,0 +1,43 @@
+---
+# substitutions:
+#   bme280_i2c_sda: GPIO21
+#   bme280_i2c_scl: GPIO22
+
+i2c:
+  sda: ${bme280_i2c_sda}
+  scl: ${bme280_i2c_scl}
+
+sensor:
+  - platform: bme280_i2c
+    update_interval: 60s
+    address: 0x76
+    temperature:
+      name: "température"
+      accuracy_decimals: 2
+      filters:
+        # on a parfois des valeurs extravaguantes (200°C ...)
+        - clamp:
+            min_value: -20
+            max_value: 50
+        - filter_out: -20
+        - filter_out: 50
+
+    pressure:
+      name: "baromètre"
+      filters:
+        # on a parfois des valeurs extravaguantes (1260 hPa ...)
+        - clamp:
+            min_value: 800
+            max_value: 1100
+        - filter_out: 800
+        - filter_out: 1100
+
+    humidity:
+      name: "humidité"
+      filters:
+        # on a parfois des valeurs extravaguantes
+        - clamp:
+            min_value: 5
+            max_value: 95
+        - filter_out: 5
+        - filter_out: 95

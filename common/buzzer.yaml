@@ -1,0 +1,38 @@
+---
+# substitutions:
+#   buzzer_pwm: D5
+#   buzzer_platform: ledc | esp8266_pwm
+
+output:
+  - platform: ${buzzer_platform}
+    id: buzzer
+    pin: ${buzzer_pwm}
+rtttl:
+  output: buzzer
+  on_finished_playback:
+  - logger.log: 'Song ended!'
+  - output.turn_off: buzzer
+api:
+  services:
+    - service: play_rtttl
+      variables:
+        song_str: string
+      then:
+        - rtttl.play:
+            rtttl: !lambda 'return song_str;'
+#samsung_tone:d=2,o=6,b=255:
+#2a5,4d,4p,4d,4f#,4p,4f#,4p,2d.,16p
+#2a5,16p,4a5.,16p,
+#4a5,2e,8d,4c#,8b5,1a5,8p,
+#2a5,4d,4p,4d,4f#,4p,4f#,4p,2d.,16p
+#4a5,2d,16p,8d,4c#,16p,8c#,16p,2b5,2d,2g#5,1a5
+
+#mario-1-up:d=16,o=6,b=130: e5,g5,e,c,d,g
+
+button:
+  - platform: template
+    name: "play Mario 1-UP"
+    on_press:
+      - rtttl.play:
+          rtttl: |
+            mario-1-up:d=16,o=6,b=130: e5,g5,e,c,d,g

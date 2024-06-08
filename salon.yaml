@@ -1,0 +1,65 @@
+---
+esphome:
+  name: salon
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+remote_receiver:
+  pin: D2
+  dump: rc_switch
+  tolerance: 60%
+  filter: 255us
+  idle: 10ms
+  buffer_size: 2kb
+
+remote_transmitter:
+  pin: D4
+  carrier_duty_percent: 100%
+
+switch:
+  - platform: template
+    name: RF-P2
+    turn_off_action:
+      - remote_transmitter.transmit_raw:
+          code: [-784, 439, -788, 436, -788, 1050, -788, 440, -785, 439, -788, 440, -786, 439, -788, 439, -786, 439, -786, 1049, -786]
+          repeat:
+            times: 24
+            wait_time: 1ms
+    turn_on_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: '101011011101110111011010'
+          protocol: 1
+          repeat:
+            times: 24
+            wait_time: 1ms
+
+  - platform: template
+    name: RF-P5
+    turn_off_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: '101011011101110111010011'
+          protocol:
+            pulse_length: 151
+          repeat:
+            times: 24
+            wait_time: 1ms
+    turn_on_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: '101011011101110111011011'
+          protocol:
+            pulse_length: 151
+          repeat:
+            times: 24
+            wait_time: 1ms

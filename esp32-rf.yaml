@@ -1,0 +1,170 @@
+---
+## TODO
+#
+# Hardware
+#   - Broche n°2 = GND ==> n'est pas reliée à GND
+#   - 4.7K pull-up entre GPIO13 et 3.3V
+#
+# Software
+#   - configurer DS18B20 sur GPIO13
+#   - configurer résistance lum. sur GPIO34
+#   - tester RXB6 une fois connecté
+#   - tester TX1 une fois connecté
+#   - tester DS18B20 une fois connecté
+#   - tester résistance lum. une fois connectée
+#
+# Schéma
+#   - IC ESP32 : broche 2 n'est pas GND
+#   - inverser polarité buzzer
+#   - connecter buzzer sur gpio16 et GND
+#   - led sur gpio0
+#   - data de DS18B20 sur GPIO13 (car S02 sur flash interne)
+#   - 4.7K pull-up entre GPIO13 et 3.3V
+#   - alim +5V du RXB6 sur +3.3V pour ne pas avoir DATA en >3.3V
+#   - écarter BME280 et TX 433
+
+substitutions:
+  devicename: esp32-rf
+  upper_devicename: ESP32 RF
+  rf433_tx_pin: GPIO22
+  rf433_rx_pin: GPIO32
+  bme280_i2c_sda: GPIO18
+  bme280_i2c_scl: GPIO19
+  buzzer_pwm: GPIO16
+  buzzer_platform: ledc
+
+packages:
+  device_base: !include common/device_base.yaml
+  device_esp32: !include common/device_esp32.yaml
+  rf433: !include common/rf433.yaml
+  bme280: !include common/bme280.yaml
+  buzzer: !include common/buzzer.yaml
+
+esphome:
+  name_add_mac_suffix: true
+
+esp32:
+  board: nodemcu-32s
+
+wifi:
+  manual_ip:
+    # pour une connection rapide, et pour que le conteneur docker esphome puisse trouver l'ESP sans mDNS
+    static_ip: 192.168.1.244
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+## Device-specific
+
+number:
+  - platform: template
+    id: luminosity_max_value
+    name: valeur RAW de la luminosité au max
+    restore_value: yes
+    initial_value: 2
+    optimistic: yes
+    min_value: 0
+    max_value: 3.33
+    step: 0.01
+    on_value:
+      then:
+        - sensor.template.publish:
+            id: linear_regression_a
+            state: !lambda 'return (100.0 - 0.0) / ( x - id(luminosity_min_value).state);'
+        - sensor.template.publish:
+            id: linear_regression_b
+            state: !lambda 'return 100.0 - ( id(linear_regression_a).state * x);'
+  - platform: template
+    id: luminosity_min_value
+    name: valeur RAW de la luminosité au min
+    restore_value: yes
+    initial_value: 0.075
+    optimistic: yes
+    min_value: 0
+    max_value: 3.33
+    step: 0.001
+    on_value:
+      then:
+        - sensor.template.publish:
+            id: linear_regression_a
+            state: !lambda 'return (100.0 - 0.0) / ( id(luminosity_max_value).state - x);'
+        - sensor.template.publish:
+            id: linear_regression_b
+            state: !lambda 'return 100.0 - ( id(linear_regression_a).state * id(luminosity_max_value).state);'
+
+dallas:
+  - pin: GPIO13
+
+sensor:
+  - platform: dallas
+    address: "0x6700044c9793ff28"
+    name: "temperature 18b20"
+  - platform: template
+    id: linear_regression_a
+    name: régression linéaire facteur
+    accuracy_decimals: 2
+    update_interval: never
+  - platform: template
+    id: linear_regression_b
+    name: régression linéaire offset
+    accuracy_decimals: 2
+    update_interval: never
+  - platform: adc
+    pin: GPIO34
+    attenuation: auto
+    id: luminosity_raw_adc
+    name: luminosity raw adc
+    accuracy_decimals: 4
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - sensor.template.publish:
+            id: luminosity
+            state: !lambda 'return x;'
+  - platform: template
+    id: luminosity
+    name: luminosity
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    icon: mdi:brightness-percent
+    state_class: measurement
+    filters:
+      - lambda: return x * id(linear_regression_a).state + id(linear_regression_b).state;
+
+button:
+  - platform: template
+    name: "MAJ sensor lumiere"
+    on_press:
+      - component.update: luminosity_raw_adc
+  - platform: template
+    name: "Calibrage MAX luminosité"
+    on_press:
+    - number.set:
+        id: luminosity_max_value
+        value: !lambda 'return id(luminosity_raw_adc).state;'
+
+output:
+  - platform: ledc
+    id: led_pin
+    pin: GPIO0
+
+light:
+  - platform: monochromatic
+    output: led_pin
+    id: led
+    name: "LED"
+    gamma_correct: 0
+    effects:
+      - pulse
+      - automation:
+          name: Sleep pattern
+          sequence:
+            - light.turn_on:
+                id: led
+                brightness: 100%
+                transition_length: 2s
+            - delay: 2.5s
+            - light.turn_on:
+                id: led
+                brightness: 1%
+                transition_length: 4s
+            - delay: 4.5s

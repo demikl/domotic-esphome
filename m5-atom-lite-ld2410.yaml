@@ -1,0 +1,41 @@
+---
+substitutions:
+  devicename: m5-lite-ld2410
+  upper_devicename: M5 Atom Lite with LD2410
+  ld2410_tx_pin: "22"
+  ld2410_rx_pin: "19"
+
+packages:
+  device_base: !include common/device_base.yaml
+  #device_esp32: !include common/device_esp32.yaml
+  m5lite: !include common/m5-atom-lite.yaml
+  ld2410: !include common/ld2410.yaml
+
+wifi:
+  manual_ip:
+    # pour une connection rapide, et pour que le conteneur docker esphome puisse trouver l'ESP sans mDNS
+    static_ip: 192.168.1.163
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+## Device-specific
+
+api:
+  services:
+    - service: remote_ir_rc5
+      variables:
+        address: int
+        command: int
+      then:
+        - remote_transmitter.transmit_rc5:
+            address: !lambda 'return address;'
+            command: !lambda 'return command;'
+
+button:
+# https://www.sbprojects.net/knowledge/ir/rc5.php
+  - platform: template
+    name: "IR standby"
+    on_press:
+      - remote_transmitter.transmit_rc5:
+          address: 0x05
+          command: 0x0B

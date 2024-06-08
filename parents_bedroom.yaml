@@ -1,0 +1,602 @@
+---
+substitutions:
+  devicename: parents_bedroom
+  upper_devicename: Chambre des parents
+  light_id_alarme: bed_head_ledstrip
+  bme280_i2c_sda: GPIO21
+  bme280_i2c_scl: GPIO22
+
+packages:
+  device_base: !include common/device_base.yaml
+  device_esp32: !include common/device_esp32.yaml
+  alarme: !include common/sensors_alarme.yaml
+  bme280: !include common/bme280.yaml
+
+esphome:
+  name: ${devicename}
+  friendly_name: ${upper_devicename}
+
+esp32:
+  board: nodemcu-32s
+
+wifi:
+  manual_ip:
+    # pour une connection rapide, et pour que le conteneur docker esphome puisse trouver l'ESP sans mDNS
+    static_ip: 192.168.1.201
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+#
+#text_sensor:
+#  - platform: ble_scanner
+#    name: "BLE Devices Scanner"
+
+sensor:
+#  - platform: xiaomi_miscale2
+#    mac_address: 'D3:F0:25:B8:D4:88'
+#    weight:
+#      name: "Xiaomi Mi Scale Weight"
+#    impedance:
+#      name: "Xiaomi Mi Scale Impedance"
+
+output:
+  - platform: ledc
+    id: red
+    pin: GPIO19
+  - platform: ledc
+    id: blue
+    pin: GPIO18
+  - platform: ledc
+    id: green
+    pin: GPIO5
+
+  # sorties fictives, pour lampes presets
+  - platform: template
+    id: fake_output
+    type: float
+    write_action: []
+
+light:
+  - platform: rgb
+    red: red
+    blue: blue
+    green: green
+    restore_mode: ALWAYS_OFF
+    name: "${upper_devicename} Eclairage tête de lit"
+    id: bed_head_ledstrip
+    effects:
+      - <<: !include common/light_effect_alarme.yaml
+      - random
+      - flicker
+    on_turn_on:
+      # gradually auto turn-off the light after some time
+      - delay: 5min
+      - light.turn_off:
+          id: bed_head_ledstrip
+          transition_length: 10min
+
+  # lampes fictives pour enregistrement des réglages
+  - platform: rgb
+    red: fake_output
+    green: fake_output
+    blue: fake_output
+    name: "${upper_devicename} Préréglage Soso"
+    id: light_preset_soso
+  - platform: rgb
+    red: fake_output
+    green: fake_output
+    blue: fake_output
+    name: "${upper_devicename} Préréglage Mick"
+    id: light_preset_mick
+
+script:
+  - id: ledstrip_warning_going_to_be_saved
+    then:
+      while:
+        condition:
+          or:
+            - binary_sensor.is_on: bouton_soso
+            - binary_sensor.is_on: bouton_mick
+        then:
+          - light.turn_on:
+              id: bed_head_ledstrip
+              flash_length: 0.05s
+              brightness: 50%
+              red: 100%
+              green: 100%
+              blue: 100%
+          - delay: 0.20s
+          - light.turn_on:
+              id: bed_head_ledstrip
+              flash_length: 0.05s
+              brightness: 50%
+              red: 100%
+              green: 0%
+              blue: 0%
+          - delay: 0.20s
+
+binary_sensor:
+  # détecteur de présence infrarouge
+  - platform: gpio
+    pin:
+      number: GPIO4
+      mode: INPUT_PULLDOWN
+    name: "${upper_devicename} PIR Sensor"
+    device_class: occupancy
+    filters:
+      # debounce
+      - delayed_on: 1s
+    #  - delayed_off: 2min
+    #on_raw_value:
+    #  then:
+    #    - light.turn_on:
+    #        id: bed_head_ledstrip
+
+# button
+#   long-pressed: enter settings mode
+#     - first, luminosity preset ; visual feedback when entering this mode is to flicker luminosity
+#       when reaching lowest and highest luminosity, visual feedback
+#     - next, hue preset ; visual feedback when entering this mode is to flicker hue, with full saturation
+#     - next (?), saturation preset ; visual feedback when entering this mode is to flicker saturation, with chosen hue
+#     - finally, validation phase: alternate between before and after settings, and:
+#       - short press: validate and set light to new settings
+#       - long press: cancel and go back to old settings
+#     when in settings mode:
+#       - long press: cycle through values
+#       - short press: validate and go to next preset mode
+#   very long pressed:
+#     visual feedback multiples times as a warning while the button is pressed, allowing to cancel entering into very long pressed mode
+#     if button is still pressed after the warnings, save the current setting for the button that was used for the very long pressed
+#   short-pressed: on/off ; if turning on, set an auto-off timer with decreasing luminosity (turn_off with very long transition ?)
+#   double short-pressed:
+#     if not already at low luminosity, go to low luminosity
+#     else (at low luminosity) highest luminosity
+  - platform: gpio
+    pin:
+      number: GPIO25
+      mode: INPUT_PULLUP
+      inverted: True
+    name: "${upper_devicename} bouton côté Soso"
+    id: bouton_soso
+    filters:
+      # debounce
+      - delayed_on: 30ms
+    on_multi_click:
+      # simple clic
+      - timing:
+        - ON for at most 0.35s
+        - OFF for at least 0.1s
+        then:
+          - logger.log: "simple clic"
+          - if:
+              condition:
+                light.is_on: bed_head_ledstrip
+              then:
+                light.turn_off: bed_head_ledstrip
+              else:
+                  # allumage depuis le préréglage
+                - light.turn_on:
+                    id: bed_head_ledstrip
+                    brightness: !lambda return id(light_preset_soso).remote_values.get_brightness();
+                    red: !lambda return id(light_preset_soso).remote_values.get_red();
+                    green: !lambda return id(light_preset_soso).remote_values.get_green();
+                    blue: !lambda return id(light_preset_soso).remote_values.get_blue();
+      # double clic
+      - timing:
+        - ON for 0.05s to 0.35s
+        - OFF for 0.05s to 0.5s
+        - ON for 0.05s to 0.35s
+        - OFF for at least 0.5s
+        then:
+          - logger.log: "double clic"
+          - if:
+              condition:
+                # si la lampe n'est pas encore allumée, on allume avec le preset à la luminosité minimale
+                light.is_off: bed_head_ledstrip
+              then:
+                light.turn_on:
+                  id: bed_head_ledstrip
+                  brightness: 7%
+                  red: !lambda return id(light_preset_soso).remote_values.get_red();
+                  green: !lambda return id(light_preset_soso).remote_values.get_green();
+                  blue: !lambda return id(light_preset_soso).remote_values.get_blue();
+              else:
+                if:
+                  condition:
+                    # attention à la comparaison entre float ... 0.05 != 0.05 si on n'a pas de chance
+                    lambda: |-
+                      return id(bed_head_ledstrip).remote_values.get_brightness() > 0.07 + 0.01;
+                  then:
+                    - logger.log: "going to lowest luminosity"
+                    - logger.log:
+                        format: "Current luminosity: %.2f"
+                        args:
+                          - id(bed_head_ledstrip).remote_values.get_brightness()
+                    - light.turn_on:
+                        id: bed_head_ledstrip
+                        brightness: 7%
+                  else:
+                    - logger.log: "going to highest luminosity"
+                    - light.turn_on:
+                        id: bed_head_ledstrip
+                        brightness: 100%
+      # appui très long : mémorisation
+      - timing:
+        - ON for at least 3s
+        then:
+          - logger.log: "appui très long, phase d'avertissement"
+          - script.execute: ledstrip_warning_going_to_be_saved
+          - delay: 2s
+          - if:
+              condition:
+                script.is_running: ledstrip_warning_going_to_be_saved
+              then:
+                # fin de la phase d'avertissement
+                - logger.log: "bouton maintenu appuyé, enregistrement"
+                - script.stop: ledstrip_warning_going_to_be_saved
+                # attendre la fin du flash d'avertissement, pour ne pas enregistrer le flash en preset
+                - delay: 0.2s
+                - light.turn_on:
+                    id: light_preset_soso
+                    brightness: !lambda return id(bed_head_ledstrip).remote_values.get_brightness();
+                    red: !lambda return id(bed_head_ledstrip).remote_values.get_red();
+                    green: !lambda return id(bed_head_ledstrip).remote_values.get_green();
+                    blue: !lambda return id(bed_head_ledstrip).remote_values.get_blue();
+                # confirmation visuelle de l'enregistrement
+                - light.turn_on:
+                    id: bed_head_ledstrip
+                    brightness: 50%
+                    red: 100%
+                    green: 0%
+                    blue: 0%
+                    flash_length: 0.2s
+                - delay: 0.2s
+                - light.turn_on:
+                    id: bed_head_ledstrip
+                    brightness: 50%
+                    red: 0%
+                    green: 100%
+                    blue: 0%
+                    flash_length: 0.2s
+                - delay: 0.2s
+                - light.turn_on:
+                    id: bed_head_ledstrip
+                    brightness: 50%
+                    red: 0%
+                    green: 0%
+                    blue: 100%
+                    flash_length: 0.2s
+              else:
+                # arrêter l'avertissement, au cas où le bouton aurait êté relaché avant la fin de la phase d'avertissement
+                - logger.log: "bouton relaché pendant la phase d'avertissement"
+
+  - platform: gpio
+    pin:
+      number: GPIO26
+      mode: INPUT_PULLUP
+      inverted: True
+    id: bouton_mick
+    name: "${upper_devicename} bouton côté Mick"
+    filters:
+      # debounce
+      - delayed_on: 30ms
+    on_multi_click:
+      # simple clic
+      - timing:
+        - ON for at most 0.35s
+        - OFF for at least 0.1s
+        then:
+          - logger.log: "simple clic"
+          - if:
+              condition:
+                light.is_on: bed_head_ledstrip
+              then:
+                light.turn_off: bed_head_ledstrip
+              else:
+                  # allumage depuis le préréglage
+                - light.turn_on:
+                    id: bed_head_ledstrip
+                    brightness: !lambda return id(light_preset_mick).remote_values.get_brightness();
+                    red: !lambda return id(light_preset_mick).remote_values.get_red();
+                    green: !lambda return id(light_preset_mick).remote_values.get_green();
+                    blue: !lambda return id(light_preset_mick).remote_values.get_blue();
+      # double clic
+      - timing:
+        - ON for 0.05s to 0.35s
+        - OFF for 0.05s to 0.5s
+        - ON for 0.05s to 0.35s
+        - OFF for at least 0.5s
+        then:
+          - logger.log: "double clic"
+          - if:
+              condition:
+                # si la lampe n'est pas encore allumée, on allume avec le preset à la luminosité minimale
+                light.is_off: bed_head_ledstrip
+              then:
+                light.turn_on:
+                  id: bed_head_ledstrip
+                  brightness: 7%
+                  red: !lambda return id(light_preset_mick).remote_values.get_red();
+                  green: !lambda return id(light_preset_mick).remote_values.get_green();
+                  blue: !lambda return id(light_preset_mick).remote_values.get_blue();
+              else:
+                if:
+                  condition:
+                    # attention à la comparaison entre float ... 0.05 != 0.05 si on n'a pas de chance
+                    lambda: |-
+                      return id(bed_head_ledstrip).remote_values.get_brightness() > 0.07 + 0.01;
+                  then:
+                    - logger.log: "going to lowest luminosity"
+                    - logger.log:
+                        format: "Current luminosity: %.2f"
+                        args:
+                          - id(bed_head_ledstrip).remote_values.get_brightness()
+                    - light.turn_on:
+                        id: bed_head_ledstrip
+                        brightness: 7%
+                  else:
+                    - logger.log: "going to highest luminosity"
+                    - light.turn_on:
+                        id: bed_head_ledstrip
+                        brightness: 100%
+      # appui très long : mémorisation
+      - timing:
+        - ON for at least 3s
+        then:
+          - logger.log: "appui très long, phase d'avertissement"
+          - script.execute: ledstrip_warning_going_to_be_saved
+          - delay: 2s
+          - if:
+              condition:
+                script.is_running: ledstrip_warning_going_to_be_saved
+              then:
+                # fin de la phase d'avertissement
+                - logger.log: "bouton maintenu appuyé, enregistrement"
+                - script.stop: ledstrip_warning_going_to_be_saved
+                # attendre la fin du flash d'avertissement, pour ne pas enregistrer le flash en preset
+                - delay: 0.2s
+                - light.turn_on:
+                    id: light_preset_mick
+                    brightness: !lambda return id(bed_head_ledstrip).remote_values.get_brightness();
+                    red: !lambda return id(bed_head_ledstrip).remote_values.get_red();
+                    green: !lambda return id(bed_head_ledstrip).remote_values.get_green();
+                    blue: !lambda return id(bed_head_ledstrip).remote_values.get_blue();
+                # confirmation visuelle de l'enregistrement
+                - light.turn_on:
+                    id: bed_head_ledstrip
+                    brightness: 50%
+                    red: 100%
+                    green: 0%
+                    blue: 0%
+                    flash_length: 0.2s
+                - delay: 0.2s
+                - light.turn_on:
+                    id: bed_head_ledstrip
+                    brightness: 50%
+                    red: 0%
+                    green: 100%
+                    blue: 0%
+                    flash_length: 0.2s
+                - delay: 0.2s
+                - light.turn_on:
+                    id: bed_head_ledstrip
+                    brightness: 50%
+                    red: 0%
+                    green: 0%
+                    blue: 100%
+                    flash_length: 0.2s
+              else:
+                # arrêter l'avertissement, au cas où le bouton aurait êté relaché avant la fin de la phase d'avertissement
+                - logger.log: "bouton relaché pendant la phase d'avertissement"
+
+####
+
+# recepteur infrarouge
+# inspirations :
+#  - https://community.home-assistant.io/t/magichome-with-ir-working-using-esphome/182555
+#  - http://woodsgood.ca/projects/2015/02/13/rgb-led-strip-controllers-ir-codes/
+#  - https://github.com/esphome/issues/issues/742#issuecomment-640077615
+
+  - platform: remote_receiver
+    id: ir_power
+    lg:
+      data: 0x00FF02FD
+      nbits: 32
+    on_press:
+      then:
+        - light.toggle:
+            id: bed_head_ledstrip
+            transition_length: 2.5s
+  - platform: remote_receiver
+    id: ir_brightness_up
+    lg:
+      data: 0x00FF3AC5
+      nbits: 32
+    on_press:
+      then:
+        - light.dim_relative:
+            id: bed_head_ledstrip
+            transition_length: 500ms
+            relative_brightness: 5%
+  - platform: remote_receiver
+    id: ir_brightness_down
+    lg:
+      data: 0x00FFBA45
+      nbits: 32
+    on_press:
+      then:
+        - light.dim_relative:
+            id: bed_head_ledstrip
+            transition_length: 500ms
+            relative_brightness: -5%
+  - platform: remote_receiver
+    id: ir_red
+    lg:
+      data: 0x00FF1AE5
+      nbits: 32
+    on_press:
+      then:
+        - light.turn_on:
+            id: bed_head_ledstrip
+            red: 100%
+            green: 0
+            blue: 0
+            effect: None
+  - platform: remote_receiver
+    id: ir_green
+    lg:
+      data: 0x00FF9A65
+      nbits: 32
+    on_press:
+      then:
+        - light.turn_on:
+            id: bed_head_ledstrip
+            red: 0
+            green: 100%
+            blue: 0
+            effect: None
+  - platform: remote_receiver
+    id: ir_blue
+    lg:
+      data: 0x00FFA25D
+      nbits: 32
+    on_press:
+      then:
+        - light.turn_on:
+            id: bed_head_ledstrip
+            red: 0
+            green: 0
+            blue: 100%
+            effect: None
+  - platform: remote_receiver
+    id: ir_white
+    lg:
+      data: 0x00FF22DD
+      nbits: 32
+    on_press:
+      then:
+        - light.turn_on:
+            id: bed_head_ledstrip
+            red: 100%
+            green: 100%
+            blue: 100%
+            effect: None
+
+  - platform: remote_receiver
+    id: ir_red_up
+    lg:
+      data: 0x00FF28D7
+      nbits: 32
+    on_press:
+      then:
+        - light.turn_on:
+            id: bed_head_ledstrip
+            red: !lambda |-
+              float current = id(bed_head_ledstrip).remote_values.get_red();
+              return current + 0.1;
+  - platform: remote_receiver
+    id: ir_red_down
+    lg:
+      data: 0x00FF08F7
+      nbits: 32
+    on_press:
+      then:
+        - light.turn_on:
+            id: bed_head_ledstrip
+            red: !lambda |-
+              float current = id(bed_head_ledstrip).remote_values.get_red();
+              return esphome::clamp(current - 0.1f, 0.0f, 1.0f);
+  - platform: remote_receiver
+    id: ir_green_up
+    lg:
+      data: 0x00FFA857
+      nbits: 32
+    on_press:
+      then:
+        - light.turn_on:
+            id: bed_head_ledstrip
+            green: !lambda |-
+              float current = id(bed_head_ledstrip).remote_values.get_green();
+              return esphome::clamp(current + 0.1f, 0.0f, 1.0f);
+  - platform: remote_receiver
+    id: ir_green_down
+    lg:
+      data: 0x00FF8877
+      nbits: 32
+    on_press:
+      then:
+        - light.turn_on:
+            id: bed_head_ledstrip
+            green: !lambda |-
+              float current = id(bed_head_ledstrip).remote_values.get_green();
+              return esphome::clamp(current - 0.1f, 0.0f, 1.0f);
+  - platform: remote_receiver
+    id: ir_blue_up
+    lg:
+      data: 0x00FF6897
+      nbits: 32
+    on_press:
+      then:
+        - light.turn_on:
+            id: bed_head_ledstrip
+            blue: !lambda |-
+              float current = id(bed_head_ledstrip).remote_values.get_blue();
+              return esphome::clamp(current + 0.1f, 0.0f, 1.0f);
+  - platform: remote_receiver
+    id: ir_blue_down
+    lg:
+      data: 0x00FF48B7
+      nbits: 32
+    on_press:
+      then:
+        - light.turn_on:
+            id: bed_head_ledstrip
+            blue: !lambda |-
+              float current = id(bed_head_ledstrip).remote_values.get_blue();
+              return esphome::clamp(current - 0.1f, 0.0f, 1.0f);
+  - platform: remote_receiver
+    id: ir_auto
+    lg:
+      data: 0x00FFF00F
+      nbits: 32
+    on_press:
+      then:
+        - if:
+            condition:
+              lambda: |-
+                return id(bed_head_ledstrip).get_effect_name() == "Random";
+            then:
+              - light.turn_on:
+                  id: bed_head_ledstrip
+                  effect: None
+            else:
+              - light.turn_on:
+                  id: bed_head_ledstrip
+                  effect: Random
+  - platform: remote_receiver
+    id: ir_play
+    lg:
+      data: 0x00FF827D
+      nbits: 32
+    on_press:
+      then:
+        - if:
+            condition:
+              lambda: |-
+                return id(bed_head_ledstrip).get_effect_name() == "Flicker";
+            then:
+              - light.turn_on:
+                  id: bed_head_ledstrip
+                  effect: None
+            else:
+              - light.turn_on:
+                  id: bed_head_ledstrip
+                  effect: Flicker
+
+remote_receiver:
+  pin:
+    number: GPIO27
+    mode: INPUT_PULLUP
+    inverted: True
+  dump: all
+  tolerance: 25%

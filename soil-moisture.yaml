@@ -1,0 +1,185 @@
+---
+substitutions:
+  devicename: esphome_iot_gardening_1
+  upper_devicename: Esphome IoT Gardening 1
+
+  # Nombre d'échantillons à moyenner pour publier une mesure sur un ADC
+  adc_samples: "10"  # max: 255
+
+esphome:
+  name: ${devicename}
+  platform: ESP32
+  board: nodemcu-32s
+  on_boot:
+
+    # pour economiser la batterie, mise en veille rapide si pas de connexion MQTT
+  - priority: 500
+    then:
+      - delay: 120s
+      - if:
+          condition:
+            binary_sensor.is_off: ${devicename}_status
+          then:
+            - deep_sleep.enter: deep_sleep_1
+
+    # publier MQTT discovery pour l'entité de desactivation du deep sleep pour OTA
+  - priority: 0  # a ce stade, MQTT est normalement connecté
+    then:
+      - delay: 10s  # sans cela, le message semble parfois publié trop tôt et n'est pas transmis au broker
+      - mqtt.publish:
+          topic: homeassistant/switch/${devicename}/prevent_deep-sleep_for_ota_action/config
+          retain: true
+          payload: |-
+            {
+              "name": "Prevent Deep-Sleep for OTA action",
+              "command_topic": "${devicename}/switch/prevent_deep-sleep_for_ota_action/command",
+              "retain": "true",
+              "unique_id": "ESPswitchprevent_deep-sleep_for_ota_action",
+              "device": {
+                "name": "${devicename}",
+                "identifiers": "246f2825e0fc"
+              }
+            }
+
+    # forcer une publication des senseurs ADC lors du boot
+  - priority: -10
+    then:
+      - component.update: interval_refresh_adc
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: true
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+#  ap:
+#    ssid: ${upper_devicename} Hotspot
+#    password: "mBVIy9awG8vE"
+#
+  manual_ip:
+    # pour une connection rapide, et pour que le conteneur docker esphome puisse trouver l'ESP sans mDNS
+    static_ip: 192.168.1.38
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+# si pas de connexion WiFi, créer un hotspot wifi
+# captive_portal:
+
+# Enable logging
+logger:
+  level: VERBOSE
+
+# Disable Home Assistant API and use MQTT instead, because we're using deep sleep
+#api:
+
+mqtt:
+  broker: 192.168.1.252
+
+  # pas de statut de disponibilité dans home-assistant
+  # sinon les valeurs des senseurs ne sont pas prises en compte si connexion éphémère
+  birth_message:
+  will_message:
+
+  # réagir si demande de désactivation du Deep Sleep pour faire un OTA
+  # pas de réaction au message "OFF", on préfèrera rebooter l'ESP après avoir envoyé le 'OFF'
+  on_message:
+  - topic: ${devicename}/switch/prevent_deep-sleep_for_ota_action/command
+    payload: 'ON'
+    then:
+      - deep_sleep.prevent: deep_sleep_1
+      - logger.log: OTA requested, disabling Deep Sleep
+
+deep_sleep:
+  id: deep_sleep_1
+  run_duration: 120s
+  sleep_duration: 15min
+
+ota:
+  password: !secret ota_password
+
+status_led:
+  pin:
+    number: GPIO1
+    inverted: true
+
+binary_sensor:
+  - platform: status
+    id: ${devicename}_status
+    name: "${upper_devicename} MQTT Connection Status"
+
+switch:
+  - platform: template
+    id: ${devicename}_enter_deep_sleep
+    name: "Enter Deep-Sleep"
+    turn_on_action:
+      - logger.log: OTA forced by MQTT action
+      - deep_sleep.enter: deep_sleep_1
+  - platform: restart
+    name: "Reboot"
+
+output:
+  # fournir le VCC au pont diviseur de tension de l'ADC
+  # plutot que de brancher directement sur un pin 3.3V
+  # permet d'économiser la batterie
+  - pin: GPIO23
+    platform: gpio
+    id: vcc_moisture_1
+
+sensor:
+  - platform: wifi_signal
+    name: "${upper_devicename} WiFi Signal"
+    update_interval: 60s
+
+  - platform: adc
+    pin: GPIO32
+    attenuation: 11db
+    name: "${upper_devicename} Moisture #1"
+    id: ${devicename}_moisture_1
+    icon: "mdi:water-percent"
+
+    # la MAJ de ce composant est faite via un script "interval"
+    # pour permettre de remplir rapidement le filtre de moyennage
+    update_interval: never
+
+    filters:
+      # ne pas garder les valeurs des courts-circuits (sur GND ou sur VCC)
+      - filter_out: 0
+      - filter_out: 3.9
+      # l'ADC de l'ESP32 ayant pas mal de bruit, on réalise de multiples mesures qui sont ensuite moyennées
+      - sliding_window_moving_average:
+          window_size: ${adc_samples}
+          send_every: ${adc_samples}
+          send_first_at: ${adc_samples}
+      # conversion linéaire en % d'humidité
+      #- calibrate_linear:
+      #  - #1.0 -> 0.0
+      #  - 3.00 -> 100.0
+    accuracy_decimals: 4
+    # créer un point dans home assistant meme si la valeur n'a pas changée
+    force_update: true
+
+globals:
+  # va servir a faire une boucle pour lire plusieurs fois l'ADC
+  - id: adc_samples_counter
+    type: int
+    initial_value: '0'
+
+interval:
+  # le script de MAJ des senseurs ADC moyennés
+  - interval: 3min
+    id: interval_refresh_adc
+    then:
+      - output.turn_on: vcc_moisture_1
+      - delay: 300ms  # a la mise sous tension, la resistance du terreau est faible puis se stabilise
+      - globals.set:
+          id: adc_samples_counter
+          value: '0'
+      - while:
+          condition:
+            lambda: |-
+              return id(adc_samples_counter) < ${adc_samples};
+          then:
+            - component.update: ${devicename}_moisture_1
+            - lambda: |-
+                id(adc_samples_counter)++;
+      - output.turn_off: vcc_moisture_1

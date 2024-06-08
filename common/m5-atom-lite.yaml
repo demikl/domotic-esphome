@@ -1,0 +1,77 @@
+---
+esp32:
+  #board: m5stack-atom
+  board: m5stack-core-esp32
+
+# IR Transmitter
+remote_transmitter:
+  - pin:
+      number: GPIO12
+    carrier_duty_percent: 50%
+    id: ir_transmitter
+
+light:
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: 27
+    num_leds: 1
+    rgb_order: GRB
+    id: neo
+    name: Button Light
+    effects:
+      - random:
+      - random:
+          name: Random fast
+          transition_length: 0.5s
+          update_interval: 0.5s
+      - flicker:
+      - addressable_rainbow:
+      - strobe:
+      - automation:
+          name: Breathe
+          sequence:
+            - light.turn_on:
+                id: neo
+                brightness: 100%
+                transition_length: 2s
+            - delay: 0.7s
+            - light.turn_on:
+                id: neo
+                brightness: 20%
+                transition_length: 5s
+            - delay: 1.5s
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: 39
+      inverted: true
+    name: Button
+    on_press:
+      then:
+        - light.toggle: neo
+
+i2c:
+  sda: GPIO25
+  scl: GPIO21
+
+# pas dispo sur M5 Atom Lite
+# uniquement    M5 Atom Matrix
+#
+# sensor:
+#   - platform: mpu6886
+#     address: 0x68
+#     accel_x:
+#       name: "MPU6886 Accel X"
+#     accel_y:
+#       name: "MPU6886 Accel Y"
+#     accel_z:
+#       name: "MPU6886 Accel z"
+#     gyro_x:
+#       name: "MPU6886 Gyro X"
+#     gyro_y:
+#       name: "MPU6886 Gyro Y"
+#     gyro_z:
+#       name: "MPU6886 Gyro z"
+#     temperature:
+#       name: "MPU6886 Temperature"

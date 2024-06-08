@@ -1,0 +1,230 @@
+---
+# substitutions:
+#   rf433_tx_pin: "GPIO32"
+#   rf433_rx_pin: "GPIO22"
+
+remote_receiver:
+  pin:
+    number: ${rf433_rx_pin}
+  filter: 4us
+  idle: 4ms
+  tolerance: 60%
+  dump:
+    - rc_switch
+
+# logger:
+#   level: DEBUG
+
+remote_transmitter:
+  pin: ${rf433_tx_pin}
+  carrier_duty_percent: 100%
+
+binary_sensor:
+  - platform: remote_receiver
+    name: SW1_ON
+    rc_switch_raw:
+      protocol: 7
+      code: &sw1on "101011011101110111011100"
+    filters:
+      - delayed_off: 200ms
+    on_press:
+      then:
+        - switch.template.publish:
+            id: sw1
+            state: "ON"
+
+  - platform: remote_receiver
+    name: SW1_OFF
+    rc_switch_raw:
+      protocol: 7
+      code: &sw1off "101011011101110111010100"
+    filters:
+      - delayed_off: 200ms
+    on_press:
+      then:
+        - switch.template.publish:
+            id: sw1
+            state: "OFF"
+
+  - platform: remote_receiver
+    name: SW2_ON
+    rc_switch_raw:
+      protocol: 7
+      code: &sw2on "101011011101110111011010"
+    filters:
+      - delayed_off: 200ms
+    on_press:
+      then:
+        - switch.template.publish:
+            id: sw2
+            state: "ON"
+
+  - platform: remote_receiver
+    name: SW2_OFF
+    rc_switch_raw:
+      protocol: 7
+      code: &sw2off "101011011101110111010010"
+    filters:
+      - delayed_off: 200ms
+    on_press:
+      then:
+        - switch.template.publish:
+            id: sw2
+            state: "OFF"
+
+  - platform: remote_receiver
+    name: SW3_ON
+    rc_switch_raw:
+      protocol: 7
+      code: &sw3on "101011011101110111011001"
+    filters:
+      - delayed_off: 200ms
+    on_press:
+      then:
+        - switch.template.publish:
+            id: sw3
+            state: "ON"
+
+  - platform: remote_receiver
+    name: SW3_OFF
+    rc_switch_raw:
+      protocol: 7
+      code: &sw3off "101011011101110111010001"
+    filters:
+      - delayed_off: 200ms
+    on_press:
+      then:
+        - switch.template.publish:
+            id: sw3
+            state: "OFF"
+
+  - platform: remote_receiver
+    name: SW4_ON
+    rc_switch_raw:
+      protocol: 7
+      code: &sw4on "101011011101110111011101"
+    filters:
+      - delayed_off: 200ms
+    on_press:
+      then:
+        - switch.template.publish:
+            id: sw4
+            state: "ON"
+
+  - platform: remote_receiver
+    name: SW4_OFF
+    rc_switch_raw:
+      protocol: 7
+      code: &sw4off "101011011101110111010101"
+    filters:
+      - delayed_off: 200ms
+    on_press:
+      then:
+        - switch.template.publish:
+            id: sw4
+            state: "OFF"
+
+  - platform: remote_receiver
+    name: SW5_ON
+    rc_switch_raw:
+      protocol: 7
+      code: &sw5on "101011011101110111011011"
+    filters:
+      - delayed_off: 200ms
+    on_press:
+      then:
+        - switch.template.publish:
+            id: sw5
+            state: "ON"
+
+  - platform: remote_receiver
+    name: SW5_OFF
+    rc_switch_raw:
+      protocol: 7
+      code: &sw5off "101011011101110111010011"
+    filters:
+      - delayed_off: 200ms
+    on_press:
+      then:
+        - switch.template.publish:
+            id: sw5
+            state: "OFF"
+
+switch:
+  - platform: template
+    id: sw1
+    name: SW1
+    optimistic: true
+    assumed_state: true
+    turn_on_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: *sw1on
+          protocol: 7
+          repeat: &repeat_rf
+            times: 10
+            wait_time: 0s
+    turn_off_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: *sw1off
+          protocol: 7
+          repeat: *repeat_rf
+  - platform: template
+    id: sw2
+    name: SW2
+    optimistic: true
+    assumed_state: true
+    turn_on_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: *sw2on
+          protocol: 7
+          repeat: *repeat_rf
+    turn_off_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: *sw2off
+          protocol: 7
+          repeat: *repeat_rf
+  - platform: template
+    id: sw3
+    name: SW3
+    optimistic: true
+    assumed_state: true
+    turn_on_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: *sw3on
+          protocol: 7
+          repeat: *repeat_rf
+    turn_off_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: *sw3off
+          protocol: 7
+          repeat: *repeat_rf
+  - platform: template
+    id: sw4
+    name: SW4
+    optimistic: true
+    assumed_state: true
+    turn_on_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: *sw4on
+          protocol: 7
+          repeat: *repeat_rf
+    turn_off_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: *sw4off
+          protocol: 7
+          repeat: *repeat_rf
+  - platform: template
+    id: sw5
+    name: SW5
+    optimistic: true
+    assumed_state: true
+    turn_on_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: *sw5on
+          protocol: 7
+          repeat: *repeat_rf
+    turn_off_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: *sw5off
+          protocol: 7
+          repeat: *repeat_rf

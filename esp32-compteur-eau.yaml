@@ -1,0 +1,110 @@
+---
+# inspiration : https://raw.githubusercontent.com/zibous/ha-watermeter
+substitutions:
+  devicename: esp32-compteur-eau
+  upper_devicename: ESP32 compteur eau
+
+packages:
+  device_base: !include common/device_base.yaml
+  device_esp32: !include common/device_esp32.yaml
+
+esphome:
+  name_add_mac_suffix: true
+
+esp32:
+  board: az-delivery-devkit-v4
+  framework:
+    type: arduino
+
+wifi:
+  manual_ip:
+    # pour une connection rapide, et pour que le conteneur docker esphome puisse trouver l'ESP sans mDNS
+    static_ip: 192.168.1.248
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+## Device-specific
+
+preferences:
+  flash_write_interval: 10min
+
+external_components:
+  - source: github://demikl/esphome-components@main
+    refresh: 0s
+    components: [wmbus]
+
+time:
+  - platform: sntp
+    id: time_sntp
+    timezone: Europe/Paris
+    servers:
+      - 0.at.pool.ntp.org
+      - 0.pool.ntp.org
+
+wmbus:
+  mosi_pin: GPIO19
+  miso_pin: GPIO05
+  clk_pin: GPIO18
+  cs_pin: GPIO04
+  gdo0_pin: GPIO16
+  gdo2_pin: GPIO17
+
+  # log_unknown (Optional): Show telegrams from not configured meters in log. Defaults to False
+  log_unknown: true
+
+  ## -------------------------------------------------
+  ## led blink mode (optional) xx = PIN
+  ## -------------------------------------------------
+  # led_pin: GPIOxx
+  # led_blink_time: "100ms"
+
+sensor:
+
+  - platform: wmbus
+
+    # Meter ID (usually from sticker). Can be specified as decimal or hex.
+    # only HEX is working for my watermeter !
+    # see: https://github.com/SzczepanLeon/esphome-components/issues/6
+    # edit watermeterid in the secrets file
+    # add_prefix: enable/disable add watermeterid to lqi, rssi, total_water_m3
+    meter_id: 0x92407109
+    # meter_id: 0x92407107
+    # meter_id: 0x92405338
+    # meter_id: 0x92405335
+    type: dme07
+    key: "51728910E66D83F851728910E66D83F8"
+    add_prefix: false
+
+# long frames (historical data ?)
+# short frame | long frame | long frame decoded
+# 1E44A511097140927B077A91001005080C082EF56B838836CDCF35267DE159 | 3E44A511097140927B077A9100300523AE3F358E34AD095D764E9BF4AD299F64CFEAE6AFC77768DBFC7717DB75FC0B2A0A26053CC966DF8353C3E46EFD79EF | 3E44A511097140927B077A910030052F2F_0413AEBE0A000FA5110100010100000000000031A11BFE299350604E8F50B35139493C4BC94CD14B6C49EB498E48
+# 1E44A511097140927B077A93001005DA5B83889E3D33864C7D008B83C75DD4 | 3E44A511097140927B077A93003005B25B440765714FB8C2B9A9F23680A5E7449F67C63E602C96898A1193061522DC572E254F424EDCC8AE284C29B47C3036 | 3E44A511097140927B077A930030052F2F_0413AFBE0A000FA5110100010100000000000031A11BFE299450604E8F50B35139493C4BC94CD14B6C49EB498E48
+
+
+    # The LQI value reported by the CC1101 is a 7 bit unsigned number with a range from 0 to 127.
+    # Note that a lower value indicates a better link.
+    # The LQI of a received packet will be bad (higher number) when there is lot of interference.
+    lqi:
+      id: wmbus_cc1101_lqi
+      name: "CC1101 LQI"
+
+    # The RSSI value reported by the CC1101 is a 8 bit signed number with an effective
+    # range from -138 dBm to -10.5 dBm when the CC1101 is operating around 868 MHz.
+    # RSSI stands for received signal strength (power) indication (in dBm).
+    # A higher value indicates higher power. (internal only) see id: cc1101_rssi
+    rssi:
+      id: wmbus_cc1101_rssi
+      name: "CC1101 RSSI"
+      filters:
+        - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+      unit_of_measurement: "%"
+
+    total_water_m3:
+      id: "waterdisplay"
+      name: "Volume eau"
+      force_update: true
+      # filters:
+      #   - heartbeat: 300s
+
+    current_alarms:
+      name: "Codes d'erreur compteur d'eau"
