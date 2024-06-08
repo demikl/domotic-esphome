@@ -39,3 +39,22 @@ button:
       - remote_transmitter.transmit_rc5:
           address: 0x05
           command: 0x0B
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: Europe/Paris
+
+display:
+  platform: tm1637
+  clk_pin: 23
+  dio_pin: 33
+  update_interval: 500ms
+  intensity: 4
+  lambda: |-
+      static int i = 0;
+      i++;
+      if ((i % 2) == 0)
+        it.strftime("%H.%M", id(homeassistant_time).now());
+      else
+        it.strftime("%H%M", id(homeassistant_time).now());
