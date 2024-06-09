@@ -1,0 +1,149 @@
+---
+substitutions:
+  devicename: esp32-heatpump
+  upper_devicename: Pompe à chaleur Mitsubishi
+
+packages:
+  device_base: !include common/device_base.yaml
+  device_esp32: !include common/device_esp32.yaml
+
+esphome:
+  name_add_mac_suffix: true
+
+esp32:
+  board: lolin_s2_mini
+
+wifi:
+  manual_ip:
+    # pour une connection rapide, et pour que le conteneur docker esphome puisse trouver l'ESP sans mDNS
+    static_ip: 192.168.1.159
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+## Device-specific
+
+output:
+  - platform: gpio
+    pin: 15
+    id: rj45_green_led_output
+light:
+  - platform: binary
+    name: "RJ45 led verte"
+    output: rj45_green_led_output
+    id: rj45_green_led_light
+
+external_components:
+  - source: github://tobias-93/esphome-ecodan-heatpump@main
+    components: [ ecodan ]
+
+uart:
+  id: ecodan_uart
+  baud_rate: 2400
+  tx_pin:
+    number: 18
+    mode:
+      output: true
+      open_drain: true
+  rx_pin:
+    number: 16
+    mode:
+      input: true
+      pullup: true
+  rx_buffer_size: 1024
+  parity: EVEN
+  debug:
+    sequence:
+      - light.toggle:
+          id: rj45_green_led_light
+
+ecodan:
+  id: ecodan_instance
+  uart_id: ecodan_uart
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+###
+
+
+text_sensor:
+  - platform: ecodan
+    date_time:
+      name: Current date/time
+    defrost:
+      name: Defrost
+    heating_stage:
+      name: Heating stage
+    operating_mode:
+      name: Operating mode
+    heat_cool:
+      name: Heating/cooling
+    hot_water_timer:
+      name: Hot water timer
+    date_energy_cons:
+      name: Date energy consumption
+    date_energy_prod:
+      name: Date energy production      
+    holiday_mode:
+      name: Holiday mode
+
+sensor:
+  - platform: ecodan
+    error_code:
+      name: Error code
+    frequency:
+      name: Frequency
+    output_power:
+      name: Output power
+    zone1_room_temperature:
+      name: Room temperature
+    gas_return_temp_signed:
+      name: Gas return temperature
+    outside_temperature:
+      name: Outside temperature
+    water_feed_temp_signed:
+      name: Water feed temperature
+    water_return_temp_signed:
+      name: Water return temperature
+    hot_water_temperature:
+      name: Hot water temperature
+    runtime:
+      name: Runtime
+    water_flow:
+      name: Water flow
+    energy_cons_yesterday:
+      name: Heating energy consumption (yesterday)
+    energy_prod_yesterday:
+      name: Heating energy production (yesterday)
+    energy_cooling_cons_yesterday:
+      name: Cooling energy consumption (yesterday)
+    energy_cooling_prod_yesterday:
+      name: Cooling energy production (yesterday)
+    energy_dhw_cons_yesterday:
+      name: Hot water energy consumption (yesterday)
+    energy_dhw_prod_yesterday:
+      name: Hot water energy production (yesterday)
+
+switch:
+  - platform: ecodan
+    power_state:
+      name: Power state
+    force_dhw:
+      name: Force DHW
+
+select:
+  - platform: ecodan
+    mode_select:
+      name: Mode
+    hot_water_mode:
+      name: Hot water mode
+
+number:
+  - platform: ecodan
+    hot_water_setpoint:
+      name: Hot water setpoint
+    zone1_room_temp_setpoint:
+      name: Room temperature setpoint
+    zone1_flow_temp_setpoint:
+      name: Flow temperature setpoint
