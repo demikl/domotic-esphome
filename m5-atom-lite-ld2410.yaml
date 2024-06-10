@@ -20,6 +20,12 @@ wifi:
 
 ## Device-specific
 
+logger:
+  level: DEBUG
+  logs:
+    sensor: INFO
+
+
 api:
   services:
     - service: remote_ir_rc5
@@ -51,10 +57,102 @@ number:
     max_value: 7
     step: 1
 
+globals:
+  - id: display_active
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
 time:
   - platform: homeassistant
     id: homeassistant_time
     timezone: Europe/Paris
+
+# doublon du capteur de mouvement LD2410
+# afin de pouvoir mettre une "automation" sur le déclenchement
+binary_sensor:
+  - platform: copy
+    source_id: has_moving_target
+    id: ld2410_motion_internal
+    internal: true
+    on_press:
+      then:
+        - logger.log: "détection de mouvement"
+        - script.execute: display_flash
+
+switch:
+  - platform: template
+    name: "Afficheur 7 segments"
+    id: display_switch
+    lambda: 'return id(display_active);'
+    turn_on_action:
+      - logger.log: "allumage de l'afficheur 7 segments"
+      - script.execute: 
+          id: display_toggle
+          active: true
+    turn_off_action:
+      - logger.log: "extinction de l'afficheur 7 segments"
+      - script.execute: 
+          id: display_toggle
+          active: false
+
+script:
+  # allume l'afficheur 7 segments pendant un temps court
+  # il ne fait que déclencher un script background, ce qui permet depuis ce script de vérifier si le background est déjà lancé
+  - id: display_flash
+    mode: restart
+    then:
+      - logger.log: "flash de l'afficheur 7 segments - AVANT IF"
+      # ne pas exécuter le mode flash si l'afficheur est déjà allumé par un toggle permanent
+      - if:
+          # | allumé | script background  ON   | STATUS |
+          # |--------|-------------------------|--------|
+          # |   0    |           1             |   1    |
+          # |   0    |           0             |   1    |
+          # |   1    |           1             |   1    |
+          # |   1    |           0             |   0    |
+          condition:
+            or:
+              # pas allumé
+              - lambda: 'return !id(display_active);'
+              # allumé par une autre instance de ce script flash
+              - and:
+                # allumé
+                - lambda: 'return id(display_active);'
+                # par ce script
+                - script.is_running: display_flash_background_runner
+          then:
+            - logger.log: "flash de l'afficheur 7 segments - APRES IF"
+            - script.execute: display_flash_background_runner
+
+  # script qui reste actif tant que l'afficheur doit rester allumé
+  - id: display_flash_background_runner
+    # pour permettre de rester allumé plus longtemps si le déclencheur est toujours actif
+    mode: restart
+    then:
+      - logger.log: "flash de l'afficheur 7 segments - BACKGROUND"
+      - globals.set:
+          id: display_active
+          value: "true"
+      - delay: 10s
+      - logger.log: "extinction de l'afficheur 7 segments - BACKGROUND"
+      - globals.set:
+          id: display_active
+          value: "false"
+
+  # allume l'afficheur 7 segments jusqu'à nouvel ordre
+  - id: display_toggle
+    parameters:
+      active: bool
+    then:
+      - logger.log:
+          format: "TOGGLE de l'afficheur 7 segments %s"
+          args: [ 'active ? "ON" : "OFF"']
+      # si l'afficheur est déjà allumé et doit s'éteindre bientôt, on stoppe le script qui va l'éteindre
+      - script.stop: display_flash
+      - globals.set:
+          id: display_active
+          value: !lambda 'return active;'
 
 display:
   platform: tm1637
@@ -65,7 +163,7 @@ display:
   lambda: |-
       static int i = 0;
       i++;
-      if (id(has_moving_target).state)
+      if (id(display_active))
       {
         it.set_on(true);
         if ((i % 2) == 0)
