@@ -104,6 +104,9 @@ light:
       - id: ledstrip_p9813
         from: 0
         to: 0
+    effects:
+      - pulse:
+
 
   - platform: partition
     name: "porte haut"
@@ -111,3 +114,5 @@ light:
       - id: ledstrip_p9813
         from: 1
         to: 1
+    effects:
+      - pulse:
