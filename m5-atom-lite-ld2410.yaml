@@ -174,3 +174,18 @@ display:
       } else {
         it.set_on(false);
       }
+
+sensor:
+  - platform: homeassistant
+    id: room_light_level
+    entity_id: sensor.esp32_rf_861390_luminosity
+    on_value:
+      then:
+        - lambda: |-
+            if (id(room_light_level).state < 20) {
+              id(display_luminosity).publish_state(0);
+            } else if (id(room_light_level).state > 60) {
+              id(display_luminosity).publish_state(7);
+            } else {
+              id(display_luminosity).publish_state(int(1 + (id(room_light_level).state - 20) * 5 / 40));
+            }
