@@ -1,0 +1,66 @@
+---
+# Branchements
+# ------------
+#
+# GPIO27 : rouge et orange
+# GPIO26 : vert et bleu
+
+substitutions:
+  devicename: guirlande-a-bouboules
+  upper_devicename: Guirlande a bouboules
+
+packages:
+  device_base: !include common/device_base.yaml
+  device_esp32: !include common/device_esp32.yaml
+
+esphome:
+  name_add_mac_suffix: false
+
+esp32:
+  board: az-delivery-devkit-v4
+
+logger:
+  level: INFO
+  #level: INFO  ## minimum DEBUG obligatoire pour dumper les codes infrarouges recus, VERBOSE pour le multi-click
+  #level: DEBUG
+  #level: VERBOSE
+  #level: VERY_VERBOSE
+  #logs:
+  #  scheduler: INFO
+
+wifi:
+  manual_ip:
+    # pour une connection rapide, et pour que le conteneur docker esphome puisse trouver l'ESP sans mDNS
+    static_ip: 192.168.1.186
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+## Device-specific
+
+preferences:
+  flash_write_interval: 10min
+
+# inspiration : https://github.com/esphome/feature-requests/issues/2501
+output:
+  - platform: ledc
+    id: pina
+    inverted: true
+    pin:
+      number: 27
+      inverted: True
+    channel: 0
+    max_power: 50%
+  - platform: ledc
+    id: pinb
+    pin: 26
+    channel: 2
+    max_power: 50%
+
+
+light:
+  - platform: cwww
+    name: "Lights"
+    cold_white: pina
+    warm_white: pinb
+    cold_white_color_temperature: 6536 K
+    warm_white_color_temperature: 2000 K
