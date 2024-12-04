@@ -26,7 +26,7 @@
 substitutions:
   devicename: esp32-rf
   upper_devicename: ESP32 RF
-  rf433_tx_pin: GPIO22
+  rf433_tx_pin: GPIO23
   rf433_rx_pin: GPIO32
   bme280_i2c_sda: GPIO18
   bme280_i2c_scl: GPIO19
@@ -91,11 +91,12 @@ number:
             id: linear_regression_b
             state: !lambda 'return 100.0 - ( id(linear_regression_a).state * id(luminosity_max_value).state);'
 
-dallas:
+one_wire:
   - pin: GPIO13
+    platform: gpio
 
 sensor:
-  - platform: dallas
+  - platform: dallas_temp
     address: "0x6700044c9793ff28"
     name: "temperature 18b20"
   - platform: template

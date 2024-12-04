@@ -6,6 +6,9 @@
 remote_receiver:
   pin:
     number: ${rf433_rx_pin}
+    mode:
+      input: true
+      pulldown: true
   filter: 4us
   idle: 4ms
   tolerance: 60%
@@ -23,7 +26,7 @@ binary_sensor:
   - platform: remote_receiver
     name: SW1_ON
     rc_switch_raw:
-      protocol: 7
+      protocol: &protocol 7
       code: &sw1on "101011011101110111011100"
     filters:
       - delayed_off: 200ms
@@ -36,7 +39,7 @@ binary_sensor:
   - platform: remote_receiver
     name: SW1_OFF
     rc_switch_raw:
-      protocol: 7
+      protocol: *protocol
       code: &sw1off "101011011101110111010100"
     filters:
       - delayed_off: 200ms
@@ -49,7 +52,7 @@ binary_sensor:
   - platform: remote_receiver
     name: SW2_ON
     rc_switch_raw:
-      protocol: 7
+      protocol: *protocol
       code: &sw2on "101011011101110111011010"
     filters:
       - delayed_off: 200ms
@@ -62,7 +65,7 @@ binary_sensor:
   - platform: remote_receiver
     name: SW2_OFF
     rc_switch_raw:
-      protocol: 7
+      protocol: *protocol
       code: &sw2off "101011011101110111010010"
     filters:
       - delayed_off: 200ms
@@ -75,7 +78,7 @@ binary_sensor:
   - platform: remote_receiver
     name: SW3_ON
     rc_switch_raw:
-      protocol: 7
+      protocol: *protocol
       code: &sw3on "101011011101110111011001"
     filters:
       - delayed_off: 200ms
@@ -88,7 +91,7 @@ binary_sensor:
   - platform: remote_receiver
     name: SW3_OFF
     rc_switch_raw:
-      protocol: 7
+      protocol: *protocol
       code: &sw3off "101011011101110111010001"
     filters:
       - delayed_off: 200ms
@@ -101,7 +104,7 @@ binary_sensor:
   - platform: remote_receiver
     name: SW4_ON
     rc_switch_raw:
-      protocol: 7
+      protocol: *protocol
       code: &sw4on "101011011101110111011101"
     filters:
       - delayed_off: 200ms
@@ -114,7 +117,7 @@ binary_sensor:
   - platform: remote_receiver
     name: SW4_OFF
     rc_switch_raw:
-      protocol: 7
+      protocol: *protocol
       code: &sw4off "101011011101110111010101"
     filters:
       - delayed_off: 200ms
@@ -127,7 +130,7 @@ binary_sensor:
   - platform: remote_receiver
     name: SW5_ON
     rc_switch_raw:
-      protocol: 7
+      protocol: *protocol
       code: &sw5on "101011011101110111011011"
     filters:
       - delayed_off: 200ms
@@ -140,7 +143,7 @@ binary_sensor:
   - platform: remote_receiver
     name: SW5_OFF
     rc_switch_raw:
-      protocol: 7
+      protocol: *protocol
       code: &sw5off "101011011101110111010011"
     filters:
       - delayed_off: 200ms
@@ -159,14 +162,14 @@ switch:
     turn_on_action:
       - remote_transmitter.transmit_rc_switch_raw:
           code: *sw1on
-          protocol: 7
+          protocol: *protocol
           repeat: &repeat_rf
             times: 10
             wait_time: 0s
     turn_off_action:
       - remote_transmitter.transmit_rc_switch_raw:
           code: *sw1off
-          protocol: 7
+          protocol: *protocol
           repeat: *repeat_rf
   - platform: template
     id: sw2
@@ -176,12 +179,12 @@ switch:
     turn_on_action:
       - remote_transmitter.transmit_rc_switch_raw:
           code: *sw2on
-          protocol: 7
+          protocol: *protocol
           repeat: *repeat_rf
     turn_off_action:
       - remote_transmitter.transmit_rc_switch_raw:
           code: *sw2off
-          protocol: 7
+          protocol: *protocol
           repeat: *repeat_rf
   - platform: template
     id: sw3
@@ -191,12 +194,12 @@ switch:
     turn_on_action:
       - remote_transmitter.transmit_rc_switch_raw:
           code: *sw3on
-          protocol: 7
+          protocol: *protocol
           repeat: *repeat_rf
     turn_off_action:
       - remote_transmitter.transmit_rc_switch_raw:
           code: *sw3off
-          protocol: 7
+          protocol: *protocol
           repeat: *repeat_rf
   - platform: template
     id: sw4
@@ -206,12 +209,12 @@ switch:
     turn_on_action:
       - remote_transmitter.transmit_rc_switch_raw:
           code: *sw4on
-          protocol: 7
+          protocol: *protocol
           repeat: *repeat_rf
     turn_off_action:
       - remote_transmitter.transmit_rc_switch_raw:
           code: *sw4off
-          protocol: 7
+          protocol: *protocol
           repeat: *repeat_rf
   - platform: template
     id: sw5
@@ -221,10 +224,10 @@ switch:
     turn_on_action:
       - remote_transmitter.transmit_rc_switch_raw:
           code: *sw5on
-          protocol: 7
+          protocol: *protocol
           repeat: *repeat_rf
     turn_off_action:
       - remote_transmitter.transmit_rc_switch_raw:
           code: *sw5off
-          protocol: 7
+          protocol: *protocol
           repeat: *repeat_rf
