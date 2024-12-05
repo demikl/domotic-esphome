@@ -231,3 +231,63 @@ switch:
           code: *sw5off
           protocol: *protocol
           repeat: *repeat_rf
+
+  - platform: template
+    id: projecteur_etoiles
+    name: Projecteur étoiles
+    optimistic: true
+    assumed_state: false  # un seul bouton toggle pour ON / OFF
+    turn_on_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: &rc_code_projecteur_etoiles "011001000001111000000001"
+          protocol: 1
+          repeat: *repeat_rf
+    turn_off_action:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: *rc_code_projecteur_etoiles
+          protocol: 1
+          repeat: *repeat_rf
+
+select:
+  - platform: template
+    name: Durée projecteur étoiles
+    optimistic: true
+    options:
+      - 2h
+      - 4h
+      - 6h
+      - RESET
+    initial_option: RESET
+    set_action:
+      - if:
+          condition:
+            - lambda: 'return x == "2h";'
+          then:
+            - remote_transmitter.transmit_rc_switch_raw:
+                code: "011001000001111000010011"
+                protocol: 1
+                repeat: *repeat_rf
+      - if:
+          condition:
+            - lambda: 'return x == "4h";'
+          then:
+            - remote_transmitter.transmit_rc_switch_raw:
+                code: "011001000001111000010100"
+                protocol: 1
+                repeat: *repeat_rf
+      - if:
+          condition:
+            - lambda: 'return x == "6h";'
+          then:
+            - remote_transmitter.transmit_rc_switch_raw:
+                code: "011001000001111000010101"
+                protocol: 1
+                repeat: *repeat_rf
+      - if:
+          condition:
+            - lambda: 'return x == "RESET";'
+          then:
+            - remote_transmitter.transmit_rc_switch_raw:
+                code: "011001000001111000001011"
+                protocol: 1
+                repeat: *repeat_rf
