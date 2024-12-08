@@ -2,8 +2,13 @@
 # Branchements
 # ------------
 #
-# GPIO27 : rouge et orange
-# GPIO26 : vert et bleu
+# GPIO27 : prise 1 - rouge et orange
+# GPIO26 : prise 1 - vert et bleu
+# GPIO25 : prise 2 - rouge et orange
+# GPIO33 : prise 2 - vert et bleu
+#
+# GPIO32 : led sur interrupteur
+# GPIO14 : interrupteur
 
 substitutions:
   devicename: guirlande-a-bouboules
@@ -43,7 +48,7 @@ preferences:
 # inspiration : https://github.com/esphome/feature-requests/issues/2501
 output:
   - platform: ledc
-    id: pina
+    id: channel1_pin1
     inverted: true
     pin:
       number: 27
@@ -51,16 +56,54 @@ output:
     channel: 0
     max_power: 50%
   - platform: ledc
-    id: pinb
+    id: channel1_pin2
     pin: 26
     channel: 2
     max_power: 50%
+  - platform: ledc
+    id: channel2_pin1
+    inverted: true
+    pin:
+      number: 25
+      inverted: True
+    channel: 4
+    max_power: 50%
+  - platform: ledc
+    id: channel2_pin2
+    pin: 33
+    channel: 6
+    max_power: 50%
+  - platform: ledc
+    id: push_button_led
+    pin: 32
+    channel: 1
 
 
 light:
   - platform: cwww
-    name: "Lights"
-    cold_white: pina
-    warm_white: pinb
+    name: "Guirlande 1"
+    cold_white: channel1_pin1
+    warm_white: channel1_pin2
     cold_white_color_temperature: 6536 K
     warm_white_color_temperature: 2000 K
+  - platform: cwww
+    name: "Guirlande 2"
+    cold_white: channel2_pin1
+    warm_white: channel2_pin2
+    cold_white_color_temperature: 6536 K
+    warm_white_color_temperature: 2000 K
+  - platform: monochromatic
+    name: "LED sur interrupteur"
+    output: push_button_led
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: 14
+      inverted: true  # interrupteur NC
+      mode:
+        input: true
+        pulldown: true  # l'interrupteur apporte le +3.3V en NC
+                        # et flottant quand appuyé, donc besoin
+                        # d'un pull-down pour amener à 0V
+    name: "Interrupteur"
