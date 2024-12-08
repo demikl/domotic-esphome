@@ -20,6 +20,18 @@ packages:
 
 esphome:
   name_add_mac_suffix: false
+  on_boot:
+    priority: 600
+    then:
+      - light.turn_on:
+          id: button_led
+          brightness: 100%
+      - light.turn_on:
+          id: guirlande1
+          effect: "Alternance très rapide"
+      - light.turn_on:
+          id: guirlande2
+          effect: "Alternance très rapide"
 
 esp32:
   board: az-delivery-devkit-v4
@@ -43,6 +55,27 @@ wifi:
 
 preferences:
   flash_write_interval: 10min
+
+
+time:
+  - platform: host
+    id: fake_time
+    on_time:
+      # synchronisation régulière de l'allumage de button_led en fonction de l'état d'allumage des guirlandes
+      - seconds: /5
+        then:
+          - if:
+              condition:
+                or:
+                  - light.is_on: guirlande1
+                  - light.is_on: guirlande2
+              then:
+                - light.turn_on:
+                    id: button_led
+                    brightness: 100%
+              else:
+                - light.turn_off:
+                    id: button_led
 
 # inspiration : https://github.com/esphome/feature-requests/issues/2501
 output:
@@ -79,11 +112,17 @@ output:
 
 
 light:
+  - platform: status_led
+    internal: true
+    id: status_led_shared
+    output: push_button_led
   - platform: monochromatic
     name: "LED sur interrupteur"
+    id: button_led
     output: push_button_led
   - platform: cwww
     name: "Guirlande 1"
+    id: guirlande1
     cold_white: channel1_pin1
     warm_white: channel1_pin2
     cold_white_color_temperature: &cold 6536 K
@@ -118,6 +157,7 @@ light:
               color_temperature: *cold
   - platform: cwww
     name: "Guirlande 2"
+    id: guirlande2
     cold_white: channel2_pin1
     warm_white: channel2_pin2
     cold_white_color_temperature: *cold
@@ -135,3 +175,23 @@ binary_sensor:
                         # et flottant quand appuyé, donc besoin
                         # d'un pull-down pour amener à 0V
     name: "Interrupteur"
+    filters:
+      - delayed_off: 10ms
+    on_press:
+      then:
+        - if:
+            condition:
+              light.is_off: button_led
+            then:
+              - light.turn_on:
+                  id: guirlande1
+                  effect: "Alternance très rapide"
+              - light.turn_on:
+                  id: guirlande2
+                  effect: "Alternance très rapide"
+            else:
+              - light.turn_off:
+                  id: guirlande1
+              - light.turn_off:
+                  id: guirlande2
+        - light.toggle: button_led
