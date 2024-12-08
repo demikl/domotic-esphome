@@ -26,7 +26,6 @@ esp32:
 
 logger:
   level: INFO
-  #level: INFO  ## minimum DEBUG obligatoire pour dumper les codes infrarouges recus, VERBOSE pour le multi-click
   #level: DEBUG
   #level: VERBOSE
   #level: VERY_VERBOSE
@@ -80,21 +79,50 @@ output:
 
 
 light:
+  - platform: monochromatic
+    name: "LED sur interrupteur"
+    output: push_button_led
   - platform: cwww
     name: "Guirlande 1"
     cold_white: channel1_pin1
     warm_white: channel1_pin2
-    cold_white_color_temperature: 6536 K
-    warm_white_color_temperature: 2000 K
+    cold_white_color_temperature: &cold 6536 K
+    warm_white_color_temperature: &warm 2000 K
+    effects: &effects
+      - strobe:
+          name: "Alternance lente"
+          colors:
+            - duration: 7s
+              transition_length: 5s
+              color_temperature: *warm
+            - duration: 7s
+              transition_length: 5s
+              color_temperature: *cold
+      - strobe:
+          name: "Alternance rapide"
+          colors:
+            - duration: 3s
+              transition_length: 0.5s
+              color_temperature: *warm
+            - duration: 3s
+              transition_length: 0.5s
+              color_temperature: *cold
+      - strobe:
+          name: "Alternance très rapide"
+          colors:
+            - duration: 0.5s
+              transition_length: 0.1s
+              color_temperature: *warm
+            - duration: 0.5s
+              transition_length: 0.1s
+              color_temperature: *cold
   - platform: cwww
     name: "Guirlande 2"
     cold_white: channel2_pin1
     warm_white: channel2_pin2
-    cold_white_color_temperature: 6536 K
-    warm_white_color_temperature: 2000 K
-  - platform: monochromatic
-    name: "LED sur interrupteur"
-    output: push_button_led
+    cold_white_color_temperature: *cold
+    warm_white_color_temperature: *warm
+    effects: *effects
 
 binary_sensor:
   - platform: gpio
