@@ -28,7 +28,7 @@ esphome:
           brightness: 100%
       - light.turn_on:
           id: guirlande1
-          effect: &effet_par_defaut "random"
+          effect: &effet_par_defaut "Aléatoire lent"
       - light.turn_on:
           id: guirlande2
           effect: *effet_par_defaut
@@ -152,6 +152,21 @@ light:
           alpha: 80%
           intensity: 10%
       - random:
+          name: "Aléatoire lent"
+          transition_length: 1s
+          update_interval: 2s
+      - random:
+          name: "Aléatoire moyen"
+          transition_length: 0.4s
+          update_interval: 0.4s
+      - random:
+          name: "Aléatoire rapide"
+          transition_length: 0.1s
+          update_interval: 0.1s
+      - random:
+          name: "Aléatoire énervé"
+          transition_length: 0.02s
+          update_interval: 0.02s
       - strobe:
           name: "Alternance lente"
           colors:
