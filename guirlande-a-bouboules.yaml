@@ -28,10 +28,10 @@ esphome:
           brightness: 100%
       - light.turn_on:
           id: guirlande1
-          effect: "Alternance très rapide"
+          effect: &effet_par_defaut "random"
       - light.turn_on:
           id: guirlande2
-          effect: "Alternance très rapide"
+          effect: *effet_par_defaut
 
 esp32:
   board: az-delivery-devkit-v4
@@ -121,36 +121,70 @@ light:
     id: guirlande1
     cold_white: channel1_pin1
     warm_white: channel1_pin2
-    cold_white_color_temperature: &cold 6536 K
-    warm_white_color_temperature: &warm 2000 K
+    cold_white_color_temperature: &cold 0 Mireds
+    warm_white_color_temperature: &warm 500 Mireds
     effects: &effects
+      - strobe:
+          name: "Arc-en-ciel"
+          colors:
+            - duration: 10s
+              transition_length: 2s
+              cold_white: 100%
+              warm_white: 100%
+            - duration: 1s
+              transition_length: 0.2s
+              cold_white: 100%
+              warm_white: 20%
+            - duration: 10s
+              transition_length: 2s
+              cold_white: 100%
+              warm_white: 100%
+            - duration: 1s
+              transition_length: 0.2s
+              cold_white: 20%
+              warm_white: 100%
+      - flicker:
+          name: "Scintillement profond"
+          alpha: 50%
+          intensity: 50%
+      - flicker:
+          name: "Scintillement léger"
+          alpha: 80%
+          intensity: 10%
+      - random:
       - strobe:
           name: "Alternance lente"
           colors:
             - duration: 7s
               transition_length: 5s
-              color_temperature: *warm
+              warm_white: 100%
+              cold_white: 20%
             - duration: 7s
               transition_length: 5s
-              color_temperature: *cold
+              warm_white: 20%
+              cold_white: 100%
       - strobe:
           name: "Alternance rapide"
           colors:
             - duration: 3s
               transition_length: 0.5s
-              color_temperature: *warm
+              warm_white: 100%
+              cold_white: 20%
             - duration: 3s
               transition_length: 0.5s
-              color_temperature: *cold
+              warm_white: 20%
+              cold_white: 100%
       - strobe:
           name: "Alternance très rapide"
           colors:
             - duration: 0.5s
               transition_length: 0.1s
-              color_temperature: *warm
+              warm_white: 100%
+              cold_white: 20%
             - duration: 0.5s
               transition_length: 0.1s
-              color_temperature: *cold
+              warm_white: 20%
+              cold_white: 100%
   - platform: cwww
     name: "Guirlande 2"
     id: guirlande2
@@ -181,10 +215,10 @@ binary_sensor:
             then:
               - light.turn_on:
                   id: guirlande1
-                  effect: "Alternance très rapide"
+                  effect: *effet_par_defaut
               - light.turn_on:
                   id: guirlande2
-                  effect: "Alternance très rapide"
+                  effect: *effet_par_defaut
             else:
               - light.turn_off:
                   id: guirlande1
