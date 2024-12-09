@@ -57,25 +57,21 @@ preferences:
   flash_write_interval: 10min
 
 
-time:
-  - platform: host
-    id: fake_time
-    on_time:
-      # synchronisation régulière de l'allumage de button_led en fonction de l'état d'allumage des guirlandes
-      - seconds: /5
-        then:
-          - if:
-              condition:
-                or:
-                  - light.is_on: guirlande1
-                  - light.is_on: guirlande2
-              then:
-                - light.turn_on:
-                    id: button_led
-                    brightness: 100%
-              else:
-                - light.turn_off:
-                    id: button_led
+interval:
+  - interval: 1s
+    then:
+      - if:
+          condition:
+            or:
+              - light.is_on: guirlande1
+              - light.is_on: guirlande2
+          then:
+            - light.turn_on:
+                id: button_led
+                brightness: 100%
+          else:
+            - light.turn_off:
+                id: button_led
 
 # inspiration : https://github.com/esphome/feature-requests/issues/2501
 output:
