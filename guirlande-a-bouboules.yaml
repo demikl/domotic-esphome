@@ -28,10 +28,10 @@ esphome:
           brightness: 100%
       - light.turn_on:
           id: guirlande1
-          effect: &effet_par_defaut "Aléatoire lent"
+          effect: &effet_par_defaut_ch1 "Bip bip 1"
       - light.turn_on:
           id: guirlande2
-          effect: *effet_par_defaut
+          effect: &effet_par_defaut_ch2 "Arc-en-ciel"
 
 esp32:
   board: az-delivery-devkit-v4
@@ -213,6 +213,66 @@ light:
               transition_length: 0.1s
               warm_white: 20%
               cold_white: 100%
+      - automation:
+          name: "Bip bip 1"
+          sequence:
+            - repeat:
+                count: 5
+                then:
+                  - light.turn_on:
+                      id: guirlande1
+                      transition_length: 0.1s
+                      warm_white: 100%
+                      cold_white: 20%
+                  - delay: 1s
+                  - light.turn_on:
+                      id: guirlande1
+                      transition_length: 0.1s
+                      warm_white: 20%
+                      cold_white: 100%
+                  - delay: 1s
+            - repeat:
+                count: 20
+                then:
+                  - light.turn_on:
+                      id: guirlande1
+                      transition_length: 0.2s
+                      warm_white: 100%
+                      cold_white: 20%
+                  - delay: 0.3s
+                  - light.turn_on:
+                      id: guirlande1
+                      transition_length: 0.2s
+                      warm_white: 20%
+                      cold_white: 100%
+                  - delay: 0.3s
+            - repeat:
+                count: 50
+                then:
+                  - light.turn_on:
+                      id: guirlande1
+                      transition_length: 0.1s
+                      warm_white: 100%
+                      cold_white: 20%
+                  - delay: 0.1s
+                  - light.turn_on:
+                      id: guirlande1
+                      transition_length: 0.1s
+                      warm_white: 100%
+                      cold_white: 100%
+                  - delay: 0.1s
+                  - light.turn_on:
+                      id: guirlande1
+                      transition_length: 0.1s
+                      warm_white: 20%
+                      cold_white: 100%
+                  - delay: 0.1s
+                  - light.turn_on:
+                      id: guirlande1
+                      transition_length: 0.1s
+                      warm_white: 100%
+                      cold_white: 100%
+                  - delay: 0.1s
   - platform: cwww
     name: "Guirlande 2"
     id: guirlande2
@@ -243,10 +303,10 @@ binary_sensor:
             then:
               - light.turn_on:
                   id: guirlande1
-                  effect: *effet_par_defaut
+                  effect: *effet_par_defaut_ch1
               - light.turn_on:
                   id: guirlande2
-                  effect: *effet_par_defaut
+                  effect: *effet_par_defaut_ch2
             else:
               - light.turn_off:
                   id: guirlande1
