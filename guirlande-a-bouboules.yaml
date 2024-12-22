@@ -35,6 +35,8 @@ esphome:
 
 esp32:
   board: az-delivery-devkit-v4
+  framework:
+    type: esp-idf
 
 logger:
   level: INFO
@@ -70,31 +72,35 @@ interval:
                 condition:
                   light.is_off: button_led
                 then:
+                  - logger.log: "button is OFF, turning ON"
                   - light.turn_on:
                       id: button_led
+                      transition_length: 0.1s
                       brightness: 100%
           else:
             - if:
                 condition:
                   light.is_on: button_led
                 then:
+                  - logger.log: "button is ON, turning OFF"
                   - light.turn_off:
                       id: button_led
+                      # doit etre inférieur a l'intervalle de cette séquence, sinon light.is_on toujours vrai
+                      transition_length: 0.1s
 
 # inspiration : https://github.com/esphome/feature-requests/issues/2501
 output:
   - platform: ledc
     id: channel1_pin1
-    inverted: true
     pin:
       number: 27
-      inverted: True
     channel: 0
     max_power: 50%
+    phase_angle: 180
   - platform: ledc
     id: channel1_pin2
     pin: 26
-    channel: 2
+    channel: 1
     max_power: 50%
   - platform: ledc
     id: channel2_pin1
@@ -107,12 +113,12 @@ output:
   - platform: ledc
     id: channel2_pin2
     pin: 33
-    channel: 6
+    channel: 5
     max_power: 50%
   - platform: ledc
     id: push_button_led
     pin: 32
-    channel: 1
+    channel: 2
 
 
 light:
