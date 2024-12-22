@@ -66,12 +66,20 @@ interval:
               - light.is_on: guirlande1
               - light.is_on: guirlande2
           then:
-            - light.turn_on:
-                id: button_led
-                brightness: 100%
+            - if:
+                condition:
+                  light.is_off: button_led
+                then:
+                  - light.turn_on:
+                      id: button_led
+                      brightness: 100%
           else:
-            - light.turn_off:
-                id: button_led
+            - if:
+                condition:
+                  light.is_on: button_led
+                then:
+                  - light.turn_off:
+                      id: button_led
 
 # inspiration : https://github.com/esphome/feature-requests/issues/2501
 output:
