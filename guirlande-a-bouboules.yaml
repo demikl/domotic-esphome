@@ -104,12 +104,11 @@ output:
     max_power: 50%
   - platform: ledc
     id: channel2_pin1
-    inverted: true
     pin:
       number: 25
-      inverted: True
     channel: 4
     max_power: 50%
+    phase_angle: 180
   - platform: ledc
     id: channel2_pin2
     pin: 33
