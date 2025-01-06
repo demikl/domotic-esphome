@@ -60,7 +60,7 @@ wmbus:
   gdo0_pin: GPIO16
   gdo2_pin: GPIO17
 
-  all_drivers: False
+  all_drivers: True
   log_all: False
   sync_mode: False
 
@@ -102,10 +102,14 @@ sensor:
       - name: "eau potable"
         field: "total"
         accuracy_decimals: 3
+        force_update: true  # pour détecter si l'eau ne coule pas
         unit_of_measurement: "m³"
         device_class: "water"
         state_class: "total_increasing"
         icon: "mdi:water"
+        filters:
+          # si pas de trame reçue depuis 1h, on considère que le capteur n'est plus représentatif du compteur d'eau
+          - timeout: 1h
 
 text_sensor:
   - platform: wmbus
