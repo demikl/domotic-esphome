@@ -2,8 +2,8 @@
 substitutions:
   devicename: m5-lite-ld2410
   upper_devicename: M5 Atom Lite with LD2410
-  ld2410_tx_pin: "22"
-  ld2410_rx_pin: "19"
+  ld2410_tx_pin: "26"
+  ld2410_rx_pin: "32"
 
 packages:
   device_base: !include common/device_base.yaml
@@ -87,12 +87,12 @@ switch:
     lambda: 'return id(display_active);'
     turn_on_action:
       - logger.log: "allumage de l'afficheur 7 segments"
-      - script.execute: 
+      - script.execute:
           id: display_toggle
           active: true
     turn_off_action:
       - logger.log: "extinction de l'afficheur 7 segments"
-      - script.execute: 
+      - script.execute:
           id: display_toggle
           active: false
 
@@ -156,8 +156,8 @@ script:
 
 display:
   platform: tm1637
-  clk_pin: 23
-  dio_pin: 33
+  clk_pin: 21
+  dio_pin: 25
   update_interval: 500ms
   intensity: 4
   lambda: |-
