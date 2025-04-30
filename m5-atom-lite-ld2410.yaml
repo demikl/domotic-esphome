@@ -189,3 +189,25 @@ sensor:
             } else {
               id(display_luminosity).publish_state(int(1 + (id(room_light_level).state - 20) * 5 / 40));
             }
+    on_value_range:
+      - below: 5
+        then:
+          # si le script background est en cours d'exécution, c'est que l'afficheur est allumé pour un court temps, on laisse allumé
+          - if:
+              condition:
+                and:
+                  - script.is_running: display_flash_background_runner
+                  - lambda: 'return id(display_active);'
+              then:
+                - logger.log: "l'afficheur est allumé, mais va bientôt s'éteindre (flash), on ne fait rien"
+              else:
+                - logger.log: "l'afficheur est allumé en permanence, on l'éteint"
+                - script.execute:
+                    id: display_toggle
+                    active: false
+      - above: 5
+        then:
+          - logger.log: "la luminosité est suffisante, on allume l'afficheur en permanence"
+          - script.execute:
+              id: display_toggle
+              active: true
