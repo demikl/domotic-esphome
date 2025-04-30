@@ -82,12 +82,14 @@ light:
     blue: fake_output
     name: "${upper_devicename} Préréglage Soso"
     id: light_preset_soso
+    restore_mode: RESTORE_AND_ON
   - platform: rgb
     red: fake_output
     green: fake_output
     blue: fake_output
     name: "${upper_devicename} Préréglage Mick"
     id: light_preset_mick
+    restore_mode: RESTORE_AND_ON
 
 script:
   - id: ledstrip_warning_going_to_be_saved
