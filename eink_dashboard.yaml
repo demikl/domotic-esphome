@@ -1,0 +1,327 @@
+substitutions:
+  devicename: eink-dashboard
+  upper_devicename: "E-Ink Weather Dashboard"
+
+packages:
+  device_base: !include common/device_base.yaml
+  device_esp32: !include common/device_esp32.yaml
+
+esphome:
+  name_add_mac_suffix: true
+
+esp32:
+  # WROOM 32U
+  variant: esp32
+
+logger:
+  level: INFO
+  #level: DEBUG
+  #level: VERBOSE
+
+wifi:
+  manual_ip:
+    # pour une connection rapide, et pour que le conteneur docker esphome puisse trouver l'ESP sans mDNS
+    static_ip: 192.168.1.234
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+
+# Time component for clock display
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: Europe/Paris
+    on_time_sync:
+      then:
+        # Update display 10 seconds after boot/time sync
+        - delay: 10s
+        - component.update: eink_display
+
+# SPI configuration for the display
+spi:
+  clk_pin: GPIO18
+  mosi_pin: GPIO23
+  id: spi_main
+
+# Fonts for the dashboard
+font:
+  - file: "gfonts://Roboto@700"
+    id: font_large_bold
+    size: 36
+    glyphs: "0123456789:°C%"
+  
+  - file: "gfonts://Roboto@400"
+    id: font_medium
+    size: 24
+    glyphs: "0123456789:°%abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ .,!?éèàûôîçÉÈÀÛÔÎÇ"
+  
+  - file: "gfonts://Roboto@300"
+    id: font_small
+    size: 16
+    glyphs: "0123456789:°%abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ .,!?/-éèàÉ"
+  
+  - file: "gfonts://Roboto@500"
+    id: font_time
+    size: 48
+    glyphs: "0123456789:"
+
+# Weather icons font - using Material Design Icons
+  - file: "https://github.com/Templarian/MaterialDesign-Webfont/raw/master/fonts/materialdesignicons-webfont.ttf"
+    id: font_icons
+    size: 24
+    glyphs:
+      - "\U000F0599" # mdi:weather-sunny
+      - "\U000F0590" # mdi:weather-cloudy  
+      - "\U000F0595" # mdi:weather-partly-cloudy
+      - "\U000F0596" # mdi:weather-rainy
+      - "\U000F0598" # mdi:weather-snowy
+
+external_components:
+  - source: github://pr#6209
+    components: [waveshare_epaper]
+
+color:
+  - id: color_dark_gray
+    red_int: 169
+    green_int: 169
+    blue_int: 169
+  - id: color_light_gray
+    red_int: 84
+    green_int: 84
+    blue_int: 84
+
+
+# Display configuration for Waveshare 4.2" e-paper
+display:
+  - platform: waveshare_epaper
+    cs_pin: GPIO5
+    dc_pin: GPIO17
+    busy_pin: GPIO4
+    reset_pin: GPIO16
+    model: 4.20in-v2
+    display_mode: GRAYSCALE4
+    id: eink_display
+    update_interval: 5min
+    rotation: 0°
+    
+    lambda: |-
+      // Clear display
+      it.fill(COLOR_OFF);
+      
+      // Get current time
+      auto time = id(homeassistant_time).now();
+      
+      // === TOP LEFT WEATHER WIDGET ===
+      // Rounded corner background for weather widget with visible shadow effect
+      int weather_x = 20;
+      int weather_y = 20;
+      int weather_w = 180;
+      int weather_h = 120;
+      int corner_radius = 15;
+      
+      // Shadow effect (offset by 4 pixels) - using dark gray for better visibility
+      it.filled_rectangle(weather_x + 4, weather_y + corner_radius + 4, weather_w, weather_h - 2*corner_radius, id(color_dark_gray));
+      it.filled_rectangle(weather_x + corner_radius + 4, weather_y + 4, weather_w - 2*corner_radius, weather_h, id(color_dark_gray));
+      // Shadow rounded corners
+      it.filled_circle(weather_x + corner_radius + 4, weather_y + corner_radius + 4, corner_radius, id(color_dark_gray));
+      it.filled_circle(weather_x + weather_w - corner_radius + 4, weather_y + corner_radius + 4, corner_radius, id(color_dark_gray));
+      it.filled_circle(weather_x + corner_radius + 4, weather_y + weather_h - corner_radius + 4, corner_radius, id(color_dark_gray));
+      it.filled_circle(weather_x + weather_w - corner_radius + 4, weather_y + weather_h - corner_radius + 4, corner_radius, id(color_dark_gray));
+      
+      // Main background (dark)
+      it.filled_rectangle(weather_x, weather_y + corner_radius, weather_w, weather_h - 2*corner_radius, COLOR_ON);
+      it.filled_rectangle(weather_x + corner_radius, weather_y, weather_w - 2*corner_radius, weather_h, COLOR_ON);
+      
+      // Rounded corners
+      it.filled_circle(weather_x + corner_radius, weather_y + corner_radius, corner_radius, COLOR_ON);
+      it.filled_circle(weather_x + weather_w - corner_radius, weather_y + corner_radius, corner_radius, COLOR_ON);
+      it.filled_circle(weather_x + corner_radius, weather_y + weather_h - corner_radius, corner_radius, COLOR_ON);
+      it.filled_circle(weather_x + weather_w - corner_radius, weather_y + weather_h - corner_radius, corner_radius, COLOR_ON);
+      
+      // Weather icon (white on dark background)
+      it.printf(weather_x + 20, weather_y + 15, id(font_icons), COLOR_OFF, "\U000F0599");
+      
+      // Temperature (large, white on black)
+      it.printf(weather_x + 60, weather_y + 25, id(font_large_bold), COLOR_OFF, "22°");
+      
+      // Location and condition (small white text)
+      it.printf(weather_x + 15, weather_y + 75, id(font_small), COLOR_OFF, "Paris");
+      it.printf(weather_x + 15, weather_y + 95, id(font_small), COLOR_OFF, "Ensoleillé");
+      
+      // === TOP RIGHT TIME WIDGET ===
+      // Encart arrondi pour la date avec fond noir pour meilleur contraste
+      int time_x = 215;
+      int time_y = 25;
+      int time_w = 185;
+      int time_h = 70;
+      
+      // Background gris pour l'heure
+      it.filled_rectangle(time_x, time_y, time_w, 50, id(color_dark_gray));
+      
+      // Large time display
+      it.strftime(time_x + 5, time_y + 5, id(font_time), COLOR_ON, "%H:%M", time);
+      
+      // Encart arrondi pour la date avec fond noir
+      int date_x = time_x + 5;
+      int date_y = time_y + 55;
+      int date_w = 175;
+      int date_h = 30;
+      int date_radius = 8;
+      
+      // Fond noir arrondi pour la date
+      it.filled_rectangle(date_x, date_y + date_radius, date_w, date_h - 2*date_radius, COLOR_ON);
+      it.filled_rectangle(date_x + date_radius, date_y, date_w - 2*date_radius, date_h, COLOR_ON);
+      it.filled_circle(date_x + date_radius, date_y + date_radius, date_radius, COLOR_ON);
+      it.filled_circle(date_x + date_w - date_radius, date_y + date_radius, date_radius, COLOR_ON);
+      it.filled_circle(date_x + date_radius, date_y + date_h - date_radius, date_radius, COLOR_ON);
+      it.filled_circle(date_x + date_w - date_radius, date_y + date_h - date_radius, date_radius, COLOR_ON);
+      
+      // French date display avec texte blanc centré sur fond noir
+      const char* day_names[] = {"Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"};
+      const char* month_names[] = {"", "Jan", "Fév", "Mar", "Avr", "Mai", "Jun", 
+                                   "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"};
+      
+      char date_str[30];
+      sprintf(date_str, "%s %d %s", 
+              day_names[time.day_of_week - 1], 
+              time.day_of_month, 
+              month_names[time.month]);
+      
+      // Centrage horizontal et vertical amélioré
+      it.printf(date_x + 15, date_y + 6, id(font_small), COLOR_OFF, date_str);
+      
+      // === MIDDLE LEFT HUMIDITY WIDGET ===
+      int hum_x = 20;
+      int hum_y = 160;
+      int hum_w = 160;
+      int hum_h = 60;
+      
+      // Light background with border
+      it.filled_rectangle(hum_x, hum_y, hum_w, hum_h, id(color_dark_gray));
+      it.rectangle(hum_x, hum_y, hum_w, hum_h, COLOR_ON);
+      
+      // Humidity label
+      it.printf(hum_x + 10, hum_y + 10, id(font_small), COLOR_ON, "HUMIDITÉ");
+      
+      // Humidity value
+      it.printf(hum_x + 10, hum_y + 30, id(font_medium), COLOR_ON, "65%%");
+      
+      // Progress bar for humidity with gradient effect
+      int bar_x = hum_x + 80;
+      int bar_y = hum_y + 35;
+      int bar_w = 60;
+      int bar_h = 8;
+      
+      // Progress bar background
+      it.filled_rectangle(bar_x, bar_y, bar_w, bar_h, id(color_light_gray));
+      it.rectangle(bar_x, bar_y, bar_w, bar_h, COLOR_ON);
+      
+      // Progress bar fill (65% humidity)
+      it.filled_rectangle(bar_x + 1, bar_y + 1, (bar_w - 2) * 0.65, bar_h - 2, COLOR_ON);
+      
+      // === MIDDLE RIGHT PRESSURE WIDGET ===
+      int press_x = 200;
+      int press_y = 160;
+      int press_w = 160;
+      int press_h = 60;
+      
+      // Gradient background effect
+      it.filled_rectangle(press_x, press_y, press_w, press_h, COLOR_ON);
+      
+      // Pressure label (white on black)
+      it.printf(press_x + 10, press_y + 10, id(font_small), COLOR_OFF, "PRESSION");
+      
+      // Pressure value (white on black)
+      it.printf(press_x + 10, press_y + 30, id(font_medium), COLOR_OFF, "1013 hPa");
+      
+      // === BOTTOM FORECAST SECTION ===
+      int forecast_y = 220;  // Remonté de 240 à 220
+      
+      // Section title with underline
+      it.printf(20, forecast_y, id(font_medium), COLOR_ON, "PRÉVISIONS");
+      it.filled_rectangle(20, forecast_y + 25, 120, 2, id(color_light_gray));
+      
+      // Mini forecast widgets with improved styling
+      for (int i = 0; i < 3; i++) {
+        int mini_x = 20 + i * 120;
+        int mini_y = forecast_y + 35;  // y=255, hauteur 35px -> fin à y=290
+        int mini_w = 100;
+        int mini_h = 35;  // Réduit de 40 à 35px
+        
+        // Alternating background colors with more variety
+        if (i % 2 == 0) {
+          // Light gray background with dark border
+          it.filled_rectangle(mini_x, mini_y, mini_w, mini_h, id(color_dark_gray));
+          it.rectangle(mini_x, mini_y, mini_w, mini_h, COLOR_ON);
+        } else {
+          // Dark background
+          it.filled_rectangle(mini_x, mini_y, mini_w, mini_h, COLOR_ON);
+        }
+        
+        // Day label
+        const char* days[] = {"Demain", "Samedi", "Dimanche"};
+        if (i % 2 == 0) {
+          it.printf(mini_x + 5, mini_y + 3, id(font_small), COLOR_ON, days[i]);
+          it.printf(mini_x + 5, mini_y + 18, id(font_small), id(color_light_gray), "20°/12°");
+        } else {
+          it.printf(mini_x + 5, mini_y + 3, id(font_small), COLOR_OFF, days[i]);
+          it.printf(mini_x + 5, mini_y + 18, id(font_small), id(color_dark_gray), "18°/10°");
+        }
+        
+        // Weather icon
+        if (i % 2 == 0) {
+          it.printf(mini_x + 70, mini_y + 6, id(font_icons), COLOR_ON, "\U000F0595");
+        } else {
+          it.printf(mini_x + 70, mini_y + 6, id(font_icons), COLOR_OFF, "\U000F0590");
+        }
+      }
+      
+      // === DECORATIVE ELEMENTS ===
+      // Subtle lines with gradient effect
+      it.filled_rectangle(0, 150, 400, 1, id(color_light_gray));
+      it.filled_rectangle(0, 151, 400, 1, id(color_dark_gray));
+      
+      it.filled_rectangle(190, 20, 1, 120, id(color_light_gray));
+      it.filled_rectangle(191, 20, 1, 120, id(color_dark_gray));
+
+# # Home Assistant sensors for weather data
+# sensor:
+#   - platform: homeassistant
+#     id: outdoor_temperature
+#     entity_id: weather.home
+#     attribute: temperature
+    
+#   - platform: homeassistant
+#     id: outdoor_humidity
+#     entity_id: weather.home
+#     attribute: humidity
+    
+#   - platform: homeassistant
+#     id: pressure
+#     entity_id: weather.home
+#     attribute: pressure
+
+# # Text sensors for weather conditions
+# text_sensor:
+#   - platform: homeassistant
+#     id: weather_condition
+#     entity_id: weather.home
+    
+#   - platform: homeassistant
+#     id: weather_forecast
+#     entity_id: weather.home
+#     attribute: forecast
+
+# Buttons for manual refresh
+button:
+  - platform: template
+    name: "Refresh E-Ink Display"
+    on_press:
+      then:
+        - component.update: eink_display
+
+# Status LED
+status_led:
+  pin:
+    number: GPIO2
+    inverted: true

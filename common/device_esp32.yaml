@@ -1,4 +1,8 @@
 ---
+esp32:
+  framework:
+    type: esp-idf
+
 # activer ceci coupe la réception des logs via UART0
 # light:
 #   - platform: status_led
