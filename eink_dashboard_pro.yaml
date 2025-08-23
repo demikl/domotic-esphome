@@ -54,8 +54,13 @@ font:
   # Main display fonts
   - file: "gfonts://Roboto@700"
     id: font_header
-    size: 42
-    glyphs: "0123456789:°C%"
+    size: 20
+    glyphs: "0123456789:°C%|.m"
+
+  - file: "gfonts://Roboto@700"
+    id: font_header_small
+    size: 12
+    glyphs: "0123456789:°C%|.m"
   
   - file: "gfonts://Roboto@400"
     id: font_body
@@ -79,6 +84,13 @@ font:
 
   # Weather and utility icons
   - file: "https://github.com/Templarian/MaterialDesign-Webfont/raw/master/fonts/materialdesignicons-webfont.ttf"
+    id: font_weather_icons_small
+    size: 24
+    glyphs:
+      - "\U000F0596" # mdi:weather-rainy
+
+  # Weather and utility icons
+  - file: "https://github.com/Templarian/MaterialDesign-Webfont/raw/master/fonts/materialdesignicons-webfont.ttf"
     id: font_weather_icons
     size: 36
     glyphs:
@@ -99,6 +111,20 @@ font:
       - "\U000F05B0" # mdi:window-restore (correct)
       - "\U000F0341" # mdi:home - house icon
       - "\U000F02DC" # mdi:lock
+
+  - file: "https://github.com/Templarian/MaterialDesign-Font/raw/master/MaterialDesignIconsDesktop.ttf"
+    id: icons_50
+    size: 50
+    glyphs:
+      - "\U000F06D9"  # mdi:garage
+      - "\U000F06DA"  # mdi:garage-open
+      - "\U000F081B"  # mdi:door-closed
+      - "\U000F081C"  # mdi:door-open
+      - "\U000F181E"  # mdi:door-sliding
+      - "\U000F1820"  # mdi:door-sliding-open
+      - "\U000F11DB"  # mdi:window-closed-variant
+      - "\U000F11DC"  # mdi:window-open-variant
+      - "\U000F068A"  # mdi:shield-home
 
 color:
   - id: color_dark_gray
@@ -130,201 +156,128 @@ display:
       const int MARGIN = 8;
       const int SECTION_SPACING = 4;
       
-      // Clear display with white background
-      it.fill(COLOR_OFF);
+      // Clear display with BLACK background
+      it.fill(COLOR_ON);
+
+      // coin superieur gauche arrondi
+      // cercle de centre 300,300, rayon 300
+      it.filled_circle(300, 300, 300, COLOR_OFF);
+
+      // il reste une zone en haut à droite qui est noire, on force un rectangle blanc
+      // à partir de x=300 jusqu'à la fin de l'écran
+      it.filled_rectangle(300, 0, SCREEN_WIDTH - 300, 300, COLOR_OFF);
       
       // Get current time
       auto time = id(homeassistant_time).now();
+
+      // affichage de l'heure
+      it.strftime(4, 4, id(font_time), COLOR_OFF, "%H:%M", time);
+
+      // juste en dessous, icône météo actuelle, puis symbole pipe, puis température, puis pipe
+      it.printf(4, 56, id(font_weather_icons), COLOR_OFF, "\U000F0599"); // icône soleil
+      // symbole pipe
+      it.printf(36, 60, id(font_header), color_dark_gray, "|");
+      // température actuelle
+      it.printf(40, 60, id(font_header), color_dark_gray, "22°C"); // température actuelle
       
-      // === TOP HEADER BAR ===
-      // White header bar with black divider
-      it.filled_rectangle(0, 0, SCREEN_WIDTH, 60, COLOR_OFF);
-      
-      // Date section (left) - black text on white
-      it.printf(10, 8, id(font_caption), COLOR_ON, "VEN");
-      it.printf(10, 22, id(font_body), COLOR_ON, "OCT 22, 2025");
-      
-      // Time section (center) - format 24h français
-      it.strftime(140, 8, id(font_time), COLOR_ON, "%H:%M", time);
-      
-      // Status icons (right side) - black on white
-      it.printf(350, 15, id(font_weather_icons), COLOR_ON, "\U000F0599");
-      
-      // === WEATHER SECTION ===
-      int weather_y = 70;
-      int weather_h = 35;
-      
-      // Weather info line
-      it.printf(10, weather_y, id(font_body), COLOR_ON, "22°C | Ensoleillé");
-      it.printf(200, weather_y, id(font_weather_icons), COLOR_ON, "\U000F0599");
-      it.printf(240, weather_y, id(font_body), COLOR_ON, "10%%");
-      it.printf(280, weather_y, id(font_weather_icons), COLOR_ON, "\U000F0596");
-      
-      // === MAIN CONTENT AREA ===
-      int content_y = weather_y + weather_h + 10;
-      int content_h = SCREEN_HEIGHT - content_y - MARGIN;
-      
-      // Left section - Temperature Trend Graph
-      int left_w = 180;
-      int graph_x = MARGIN;
-      int graph_y = content_y;
-      int graph_w = left_w;
-      int graph_h = 100;
-      
-      // Graph title
-      it.printf(graph_x, graph_y, id(font_caption), COLOR_ON, "4 Hour Temperature Trend");
-      
-      // Graph area background
-      it.rectangle(graph_x, graph_y + 15, graph_w, graph_h - 15, COLOR_ON);
-      
-      // Y-axis labels
-      it.printf(graph_x + 5, graph_y + 20, id(font_caption), COLOR_ON, "80");
-      it.printf(graph_x + 5, graph_y + 40, id(font_caption), COLOR_ON, "60");
-      it.printf(graph_x + 5, graph_y + 60, id(font_caption), COLOR_ON, "20");
-      it.printf(graph_x + 5, graph_y + 80, id(font_caption), COLOR_ON, "0");
-      
-      // X-axis labels
-      it.printf(graph_x + 30, graph_y + 85, id(font_caption), COLOR_ON, "10 AM");
-      it.printf(graph_x + 70, graph_y + 85, id(font_caption), COLOR_ON, "2 PM");
-      it.printf(graph_x + 110, graph_y + 85, id(font_caption), COLOR_ON, "4 PM");
-      it.printf(graph_x + 150, graph_y + 85, id(font_caption), COLOR_ON, "6 PM");
-      
-      // Temperature trend line with filled area
-      int temp_points[5];
-      int temp_x_coords[5];
-      
-      // Calculate temperature points
-      for (int i = 0; i < 5; i++) {
-        temp_x_coords[i] = graph_x + 30 + i * 30;
-        temp_points[i] = graph_y + 70 - i * 8; // Rising trend
+      // en dessous, prévision de précipitations cumulées en mm d'eau
+      // symbole goutte d'eau
+      it.printf(4, 90, id(font_weather_icons_small), COLOR_OFF, "\U000F0596"); // icône pluie
+      // symbole pipe
+      it.printf(26, 92, id(font_header_small), color_light_gray, "|");
+      // precipitations
+      it.printf(28, 92, id(font_header_small), color_light_gray, "2.3mm"); // prévision de précipitations cumulées en mm d'eau
+
+      // ligne horizontale
+      it.filled_rectangle(0, 115, 60, 3, color_light_gray);
+
+      // a droite, une section de largeur 80 pixels de largeur, divisée en 5 sections de 60 pixels de hauteur chacune
+      // délimitations par une ligne de couleur color_dark_gray
+      int right_section_x = SCREEN_WIDTH - 80;
+      int section_h = 60;
+
+      // Ligne verticale pour délimiter la section de droite
+      it.vertical_line(right_section_x, 0, SCREEN_HEIGHT, id(color_dark_gray));
+
+      // Lignes horizontales pour diviser la section en 5
+      for (int i = 1; i < 5; ++i) {
+        int y = i * section_h;
+        it.horizontal_line(right_section_x, y, 80, id(color_dark_gray));
       }
+
+      // dans chaque section, il y aura une grande icône centrée horizontalement dans la section,
+      // et en dessous un petit texte centré horizontalement dans la section
+      // si état = fermé ou inactif, fond blanc, icône noire, texte noir
+      // si état = ouvert ou actif, fond color_dark_gray, icône blanche, rectangle noir derriere le texte, texte blanc
+      // le contenu, de haut en bas :
+      // 1. porte de garage (fermée)
+      // 2. porte d'entrée (ouverte)
+      // 3. fenêtre salon (ouverte)
+      // 4. fenêtre chambre (fermée)
+      // 5. alarme (activée)
+
+      // Configuration des états des équipements
+      struct EquipmentState {
+        const char* label;
+        const char* icon_closed;
+        const char* icon_open;
+        bool is_open;
+      };
       
-      // Fill area under the curve with light gray
-      for (int x = temp_x_coords[0]; x <= temp_x_coords[4]; x++) {
-        // Linear interpolation between points
-        int segment = 0;
-        for (int j = 0; j < 4; j++) {
-          if (x <= temp_x_coords[j+1]) {
-            segment = j;
-            break;
+      EquipmentState equipment[5] = {
+        {"Garage", "\U000F06D9", "\U000F06DA", false},    // garage fermé
+        {"Entrée", "\U000F081B", "\U000F081C", true},     // porte d'entrée ouverte
+        {"Salon", "\U000F181E", "\U000F1820", true},      // fenêtre salon ouverte (porte coulissante)
+        {"Chambre", "\U000F11DB", "\U000F11DC", false},   // fenêtre chambre fermée
+        {"Alarme", "", "\U000F068A", true}                // alarme activée (rien si inactive, shield-home si active)
+      };
+
+      // Dessiner chaque section
+      for (int i = 0; i < 5; i++) {
+        int section_y = i * section_h;
+        int icon_x = right_section_x + 40; // centre horizontal de la section (80/2 = 40)
+        int icon_y = section_y;
+        int text_x = right_section_x + 40;
+        int text_y = section_y + 45;
+        
+        // Déterminer les couleurs selon l'état
+        auto bg_color = equipment[i].is_open ? id(color_dark_gray) : COLOR_OFF;
+        auto icon_color = equipment[i].is_open ? COLOR_OFF : COLOR_ON;
+        auto text_color = equipment[i].is_open ? COLOR_OFF : COLOR_ON;
+        
+        // Fond de la section
+        it.filled_rectangle(right_section_x + 1, section_y + 1, 78, section_h - 2, bg_color);
+        
+        // Icône centrée
+        const char* icon = equipment[i].is_open ? equipment[i].icon_open : equipment[i].icon_closed;
+        
+        // Cas spécial pour l'alarme : n'afficher l'icône que si elle est active
+        if (strcmp(equipment[i].label, "Alarme") == 0) {
+          if (equipment[i].is_open) {
+            it.printf(icon_x - 25, icon_y, id(icons_50), icon_color, icon);
           }
+          // Si alarme inactive, ne rien afficher
+        } else {
+          // Pour les autres équipements, afficher l'icône normalement
+          it.printf(icon_x - 25, icon_y, id(icons_50), icon_color, icon);
         }
         
-        int x1 = temp_x_coords[segment];
-        int x2 = temp_x_coords[segment + 1];
-        int y1 = temp_points[segment];
-        int y2 = temp_points[segment + 1];
-        
-        // Linear interpolation
-        int y_curve = y1 + ((y2 - y1) * (x - x1)) / (x2 - x1);
-        
-        // Fill from baseline to curve
-        it.line(x, graph_y + 78, x, y_curve, id(color_light_gray));
-      }
-      
-      // Draw the temperature trend line and points
-      for (int i = 0; i < 5; i++) {
-        it.filled_circle(temp_x_coords[i], temp_points[i], 2, COLOR_ON);
-        if (i > 0) {
-          it.line(temp_x_coords[i-1], temp_points[i-1], temp_x_coords[i], temp_points[i], COLOR_ON);
+        // Si état actif, rectangle noir derrière le texte
+        if (equipment[i].is_open) {
+          it.filled_rectangle(right_section_x + 1, text_y - 2, 78, 16, COLOR_ON);
         }
-      }
-      
-      // Right side - Status indicators with individual boxes like in reference
-      int right_x = graph_x + left_w + 20;
-      int right_w = SCREEN_WIDTH - right_x - MARGIN;
-      
-      // Status indicators organized in 2 columns, 2 rows
-      const char* status_items[] = {"Windows", "Door", "Window", "Garage"};
-      const bool status_open[] = {false, false, false, false}; // all closed for demo
-      const char* status_icons_closed[] = {"\U000F109E", "\U000F081C", "\U000F109E", "\U000F06D3"}; // window-maximize, door, window-maximize, garage
-      const char* status_icons_open[] = {"\U000F05B0", "\U000F081D", "\U000F05B0", "\U000F06D4"}; // window-restore, door-open, window-restore, garage-open
-      
-      int box_w = right_w / 2; // 2 columns, no margin between
-      int box_h = 45; // Taller boxes
-      
-      for (int i = 0; i < 4; i++) {
-        int col = i % 2; // 0 or 1
-        int row = i / 2; // 0 or 1
-        int box_x = right_x + col * box_w;
-        int box_y = graph_y + row * box_h;
         
-        // Box background - white with black border
-        it.filled_rectangle(box_x, box_y, box_w, box_h, COLOR_OFF);
-        it.rectangle(box_x, box_y, box_w, box_h, COLOR_ON);
-        
-        // Icon at top center
-        const char* icon = status_open[i] ? status_icons_open[i] : status_icons_closed[i];
-        int icon_x = box_x + box_w/2 - 12; // Center horizontally
-        it.printf(icon_x, box_y + 8, id(font_weather_icons), COLOR_ON, icon);
-        
-        // Status text at bottom
-        int text_len = strlen(status_items[i]);
-        int text_x = box_x + (box_w - text_len * 6) / 2; // Better centering calculation
-        it.printf(text_x, box_y + box_h - 12, id(font_caption), COLOR_ON, status_items[i]);
+        // Texte centré
+        it.printf(text_x, text_y, id(font_caption), text_color,  TextAlign::TOP_CENTER, equipment[i].label);
+
+
+        // carré de debug des niveaux de gris
+        it.filled_rectangle(100, 100, 30, 30, COLOR_ON);
+        it.filled_rectangle(140, 100, 30, 30, id(color_dark_gray));
+        it.filled_rectangle(180, 100, 30, 30, id(color_light_gray));
+        it.rectangle(220, 100, 30, 30, COLOR_ON);
       }
-      
-      // === BOTTOM CHARTS SECTION ===
-      int charts_y = graph_y + graph_h + 15;
-      int chart_h = SCREEN_HEIGHT - charts_y - MARGIN;
-      
-      // Left chart - Electricity Consumption
-      int elec_x = MARGIN;
-      int elec_w = (SCREEN_WIDTH - 3*MARGIN) / 2;
-      
-      it.printf(elec_x, charts_y, id(font_caption), COLOR_ON, "Consommation Electrique");
-      
-      // Chart background
-      it.rectangle(elec_x, charts_y + 15, elec_w, chart_h - 20, COLOR_ON);
-      
-      // Bar chart data with corrected positioning
-      int bar_count = 12;
-      int bar_width = (elec_w - 30) / bar_count; // Adjust width calculation
-      int chart_heights[] = {30, 15, 25, 35, 20, 40, 45, 25, 30, 20, 15, 25};
-      int chart_base_y = charts_y + chart_h - 25; // Adjusted baseline
-      
-      for (int i = 0; i < bar_count; i++) {
-        int bar_x = elec_x + 15 + i * bar_width; // Start from 15px margin
-        int bar_h = chart_heights[i];
-        if (bar_h > 0) {
-          it.filled_rectangle(bar_x + 1, chart_base_y - bar_h, bar_width - 2, bar_h, COLOR_ON);
-        }
-      }
-      
-      // Chart labels
-      it.printf(elec_x + 5, chart_base_y + 5, id(font_caption), COLOR_ON, "7 AM");
-      
-      // Right chart - Water Consumption (inverted colors)
-      int water_x = elec_x + elec_w + MARGIN;
-      int water_w = elec_w;
-      
-      // Black background for water chart
-      it.filled_rectangle(water_x, charts_y, water_w, chart_h, COLOR_ON);
-      
-      it.printf(water_x + 10, charts_y + 5, id(font_caption), COLOR_OFF, "Consommation Eau");
-      
-      // White bars on black background with corrected positioning
-      int water_heights[] = {40, 25, 35, 30, 45, 20, 25, 40, 30, 35, 25, 30};
-      int water_base_y = charts_y + chart_h - 25; // Same baseline as electricity
-      
-      for (int i = 0; i < bar_count; i++) {
-        int bar_x = water_x + 15 + i * bar_width; // Same margin as electricity chart
-        int bar_h = water_heights[i];
-        if (bar_h > 0) {
-          it.filled_rectangle(bar_x + 1, water_base_y - bar_h, bar_width - 2, bar_h, COLOR_OFF);
-        }
-      }
-      
-      // Chart labels
-      it.printf(water_x + 5, water_base_y + 5, id(font_caption), COLOR_OFF, "7 AM");
-      
-      // === DIVIDER LINES ===
-      // Horizontal dividers
-      it.line(0, 60, SCREEN_WIDTH, 60, COLOR_ON);
-      it.line(0, weather_y + weather_h + 5, SCREEN_WIDTH, weather_y + weather_h + 5, id(color_light_gray));
-      
-      // Vertical divider between charts
-      it.line(elec_x + elec_w + MARGIN/2, charts_y, elec_x + elec_w + MARGIN/2, SCREEN_HEIGHT - MARGIN, COLOR_ON);
+
 
 # Sensors for real weather data integration
 sensor:
