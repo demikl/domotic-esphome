@@ -178,27 +178,43 @@ L'effet utilise un **cycle de zones à 3 minutes** (`zone_cycle`) qui fait passe
 
 ### Algorithme Aquatique
 
-**Période** : 45-47 secondes (houle marine)
+**Période de base** : 45-47 secondes (houle marine lente)
 
 ```cpp
-float hue = 160.0f + 80.0f * slow; // 160-240° (vert d'eau → bleu profond)
+float base_hue = 160.0f + 80.0f * slow; // 160-240° (vert d'eau → bleu profond)
 ```
 
-**Palette de couleurs** :
+**Système de Randomisation Aquatique** :
 
-- **Vert d'eau → Bleu profond** (160° - 240°) : Couleur de base évolutive
-- **Cyan pulsé** (190° - 220°) : Vagues et reflets (conditions spéciales)
-- **Violet bioluminescent** (265°) : Éclats rares (probabilité 1/1000 sur 900ms)
+L'effet utilise des **hash pseudo-aléatoires** pour créer des événements marins imprévisibles :
 
-**Effets spéciaux** :
+```cpp
+uint32_t cyan_hash = (t + seed * 1664525 + i * 1013904223) ^ (seed >> 4);
+uint32_t biolumi_hash = (t * 11 + seed * 2147483647 + i * 16807) ^ (seed >> 12);
+```
 
-- **Scintillement** : Modulation sinusoïdale haute fréquence (700ms)
-- **Éclats violets** : Déclenchement aléatoire selon la seed (toutes les 18-20 secondes)
-- **Saturation variable** : 50% - 90% selon la profondeur simulée
+**Paramètres configurables** (constants en en-tête) :
+
+- **Pulsations cyan** : Intervalles 8-25s, durées 1.2-3.5s, teintes cyan variables (180° - 215°)
+- **Éclats bioluminescents** : Intervalles 15-45s, durées 0.8-2s, teintes violettes (260° - 280°)
+- **Variations par partition** : Paramètres légèrement différents pour désynchronisation
+
+**Palette de couleurs dynamique** :
+
+- **Base marine** (160° - 240°) : Houle vert d'eau → bleu profond
+- **Pulsations cyan** (180° - 215°) : Sauts non-prévisibles vers cyan avec variations
+- **Bioluminescence** (260° - 280°) : Éclats violets-magenta totalement aléatoires
+
+**Effets spéciaux randomisés** :
+
+- **Scintillement de base** : Modulation sinusoïdale (700ms) pour texture marine
+- **Sauts cyan imprévisibles** : Transitions brutales depuis base marine vers cyan pulsé
+- **Éclats bioluminescents** : Événements violets aux temporisations vraiment aléatoires
+- **Saturation adaptative** : 50% - 95% selon l'événement en cours
 
 ### Résultat Aquatique
 
-Houle apaisante avec des variations de bleus, interrompue par de rares éclairs violets évoquant la bioluminescence planctonique.
+Houle marine naturelle (vert d'eau → bleu profond) ponctuée d'événements totalement imprévisibles : sauts soudains vers des cyans lumineux et éclats de bioluminescence violette, créant un écosystème aquatique vivant avec temporisations vraiment aléatoires.
 
 ## 🔥 Effet "Ambiance Cheminée"
 

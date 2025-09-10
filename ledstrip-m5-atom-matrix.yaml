@@ -184,26 +184,81 @@ light:
             }
       - addressable_lambda:
           name: "Ambiance Aquatique"
-          update_interval: 400ms
+          update_interval: 25ms
           lambda: |-
+            // === PARAMETRES CONFIGURABLES AQUATIQUES ===
+            const float CYAN_PULSE_INTERVAL_MIN_MS = 8000.0f;   // Intervalle min entre pulsations cyan (ms)
+            const float CYAN_PULSE_INTERVAL_MAX_MS = 25000.0f;  // Intervalle max entre pulsations cyan (ms) 
+            const float CYAN_PULSE_DURATION_MIN_MS = 1200.0f;   // Durée min pulsation cyan (ms)
+            const float CYAN_PULSE_DURATION_MAX_MS = 3500.0f;   // Durée max pulsation cyan (ms)
+            
+            const float BIOLUMI_INTERVAL_MIN_MS = 15000.0f;     // Intervalle min éclats violets (ms)
+            const float BIOLUMI_INTERVAL_MAX_MS = 45000.0f;     // Intervalle max éclats violets (ms)
+            const float BIOLUMI_DURATION_MIN_MS = 800.0f;       // Durée min éclat violet (ms)
+            const float BIOLUMI_DURATION_MAX_MS = 2000.0f;      // Durée max éclat violet (ms)
+            
             const uint32_t t = millis();
             for (int i = 0; i < it.size(); i++) {
               uint32_t seed = id(ambiance_seeds)[(i * 3) % 32];
-              float slow = fmodf((t / 45000.0f) + ((seed & 0xFF) / 255.0f), 1.0f); // houle lente
-              float hue = 160.0f + 80.0f * slow; // 160-240 (vert d'eau -> bleu profond)
-              // Accent cyan pulsé
-              if (((seed >> 8) & 0xFF) < 24 && slow > 0.6f) {
-                hue = 190.0f + 30.0f * sinf(t / 3000.0f + i * 0.4f);
-              }
-              // Rare éclat violet
-              if ((((seed >> 10) & 0x3F) == 0) && (t % 20000 < 1200)) {
-                hue = 265.0f; // violet court
-              }
+              
+              // Houle de base : vert d'eau vers bleu profond 
+              float slow = fmodf((t / 45000.0f) + ((seed & 0xFF) / 255.0f), 1.0f);
+              float base_hue = 160.0f + 80.0f * slow; // 160-240° (vert d'eau -> bleu profond)
+              float hue = base_hue;
+              
+              // Saturation de base des eaux profondes
               float sat = 0.50f + 0.40f * (((seed >> 16) & 0xFF) / 255.0f);
+              
+              // Luminosité de base avec scintillement
               float shimmer = 0.04f * sinf(t / 700.0f + i * 0.9f + (seed & 0x1F));
-              float bri = 0.30f + 0.55f * (0.5f + 0.5f * sinf((t / 8000.0f) + i * 0.19f)) + shimmer;
-              if (bri > 1.0f) bri = 1.0f; if (bri < 0.02f) bri = 0.02f;
-              it[i] = ESPHSVColor((uint8_t) hue, (uint8_t) (sat * 255.0f), (uint8_t) (bri * 255.0f));
+              float base_bri = 0.30f + 0.55f * (0.5f + 0.5f * sinf((t / 8000.0f) + i * 0.19f)) + shimmer;
+              
+              // === PULSATIONS CYAN ALEATOIRES ===
+              uint32_t cyan_hash = (t + seed * 1664525 + i * 1013904223) ^ (seed >> 4);
+              float cyan_random = (cyan_hash % 1000) / 1000.0f;
+              
+              float cyan_interval = CYAN_PULSE_INTERVAL_MIN_MS + cyan_random * (CYAN_PULSE_INTERVAL_MAX_MS - CYAN_PULSE_INTERVAL_MIN_MS);
+              float cyan_cycle = fmodf(t + (seed & 0xFFF), cyan_interval);
+              
+              float cyan_duration = CYAN_PULSE_DURATION_MIN_MS + ((cyan_hash >> 8) % 1000) / 1000.0f * (CYAN_PULSE_DURATION_MAX_MS - CYAN_PULSE_DURATION_MIN_MS);
+              
+              if (cyan_cycle < cyan_duration) {
+                float cyan_progress = cyan_cycle / cyan_duration;
+                float cyan_intensity = 0.6f * sinf(cyan_progress * 3.14159f);
+                
+                // Teinte cyan variable
+                float cyan_hue_random = ((cyan_hash >> 16) % 1000) / 1000.0f;
+                hue = 180.0f + 35.0f * cyan_hue_random; // cyan vert à cyan bleu (180° à 215°)
+                sat = 0.70f + 0.25f * cyan_intensity;
+                base_bri = 0.40f + 0.45f * (1.0f + cyan_intensity);
+              }
+              
+              // === ECLATS BIOLUMINESCENTS ALEATOIRES ===
+              uint32_t biolumi_hash = (t * 11 + seed * 2147483647 + i * 16807) ^ (seed >> 12);
+              float biolumi_random = (biolumi_hash % 1000) / 1000.0f;
+              
+              float biolumi_interval = BIOLUMI_INTERVAL_MIN_MS + biolumi_random * (BIOLUMI_INTERVAL_MAX_MS - BIOLUMI_INTERVAL_MIN_MS);
+              float biolumi_cycle = fmodf(t + ((seed >> 4) & 0x1FFF), biolumi_interval);
+              
+              float biolumi_duration = BIOLUMI_DURATION_MIN_MS + ((biolumi_hash >> 8) % 1000) / 1000.0f * (BIOLUMI_DURATION_MAX_MS - BIOLUMI_DURATION_MIN_MS);
+              
+              if (biolumi_cycle < biolumi_duration) {
+                float biolumi_progress = biolumi_cycle / biolumi_duration;
+                float biolumi_intensity = sinf(biolumi_progress * 3.14159f);
+                
+                // Teinte violette variable pour bioluminescence
+                float violet_hue_random = ((biolumi_hash >> 16) % 1000) / 1000.0f;
+                hue = 260.0f + 20.0f * violet_hue_random; // violet profond à magenta (260° à 280°)
+                sat = 0.85f + 0.15f * biolumi_intensity;
+                base_bri = 0.50f + 0.50f * biolumi_intensity;
+              }
+              
+              // Limitations
+              if (base_bri > 1.0f) base_bri = 1.0f; 
+              if (base_bri < 0.02f) base_bri = 0.02f;
+              if (hue >= 360.0f) hue = fmodf(hue, 360.0f);
+              
+              it[i] = ESPHSVColor((uint8_t) hue, (uint8_t) (sat * 255.0f), (uint8_t) (base_bri * 255.0f));
             }
       - addressable_lambda:
           name: "Ambiance Cheminée"
@@ -470,17 +525,78 @@ light:
             it[0] = ESPHSVColor((uint8_t) hue, (uint8_t)(sat*255.0f), (uint8_t)(bri*255.0f));
       - addressable_lambda:
           name: "Ambiance Aquatique"
-          update_interval: 400ms
+          update_interval: 25ms
           lambda: |-
+            // === PARAMETRES CONFIGURABLES PORTE BAS ===
+            const float CYAN_JUMP_INTERVAL_MIN_MS = 6000.0f;    // Intervalle min sauts cyan (ms)
+            const float CYAN_JUMP_INTERVAL_MAX_MS = 20000.0f;   // Intervalle max sauts cyan (ms)
+            const float CYAN_JUMP_DURATION_MIN_MS = 1000.0f;    // Durée min saut cyan (ms)
+            const float CYAN_JUMP_DURATION_MAX_MS = 2800.0f;    // Durée max saut cyan (ms)
+            
+            const float BIOLUMI_INTERVAL_MIN_MS = 18000.0f;     // Intervalle min éclats violets (ms)
+            const float BIOLUMI_INTERVAL_MAX_MS = 50000.0f;     // Intervalle max éclats violets (ms)
+            const float BIOLUMI_DURATION_MIN_MS = 600.0f;       // Durée min éclat violet (ms)
+            const float BIOLUMI_DURATION_MAX_MS = 1800.0f;      // Durée max éclat violet (ms)
+            
             const uint32_t t = millis();
             uint32_t seed = id(ambiance_seeds)[30] ^ 0xA55A5A5A;
             if (it.size() == 0) return;
+            
+            // Houle de base : vert d'eau vers bleu 
             float slow = fmodf((t / 47000.0f) + ((seed & 0xFF) / 255.0f), 1.0f);
-            float hue = 170.0f + 70.0f * slow;
-            if (((seed >> 10) & 0x3F) == 3 && (t % 18000 < 900)) hue = 265.0f;
+            float base_hue = 170.0f + 70.0f * slow; // 170-240° (vert d'eau vers bleu)
+            float hue = base_hue;
+            
+            // Saturation et luminosité de base
             float sat = 0.55f + 0.35f * (((seed >> 16) & 0xFF) / 255.0f);
-            float bri = 0.30f + 0.55f * (0.5f + 0.5f * sinf((t / 7000.0f) + (seed & 0x1F)));
-            it[0] = ESPHSVColor((uint8_t) hue, (uint8_t)(sat*255.0f), (uint8_t)(bri*255.0f));
+            float base_bri = 0.30f + 0.55f * (0.5f + 0.5f * sinf((t / 7000.0f) + (seed & 0x1F)));
+            
+            // === SAUTS CYAN ALEATOIRES ===
+            uint32_t cyan_hash = (t + seed * 1664525) ^ (seed >> 6);
+            float cyan_random = (cyan_hash % 1000) / 1000.0f;
+            
+            float cyan_interval = CYAN_JUMP_INTERVAL_MIN_MS + cyan_random * (CYAN_JUMP_INTERVAL_MAX_MS - CYAN_JUMP_INTERVAL_MIN_MS);
+            float cyan_cycle = fmodf(t + (seed & 0xFFF), cyan_interval);
+            
+            float cyan_duration = CYAN_JUMP_DURATION_MIN_MS + ((cyan_hash >> 8) % 1000) / 1000.0f * (CYAN_JUMP_DURATION_MAX_MS - CYAN_JUMP_DURATION_MIN_MS);
+            
+            if (cyan_cycle < cyan_duration) {
+              float cyan_progress = cyan_cycle / cyan_duration;
+              float cyan_intensity = 0.7f * sinf(cyan_progress * 3.14159f);
+              
+              // Saut vers cyan avec variations
+              float cyan_hue_random = ((cyan_hash >> 16) % 1000) / 1000.0f;
+              hue = 185.0f + 25.0f * cyan_hue_random; // cyan variable (185° à 210°)
+              sat = 0.75f + 0.20f * cyan_intensity;
+              base_bri = 0.45f + 0.40f * (1.0f + cyan_intensity);
+            }
+            
+            // === ECLATS BIOLUMINESCENTS ALEATOIRES ===
+            uint32_t biolumi_hash = (t * 13 + seed * 2147483647) ^ (seed >> 14);
+            float biolumi_random = (biolumi_hash % 1000) / 1000.0f;
+            
+            float biolumi_interval = BIOLUMI_INTERVAL_MIN_MS + biolumi_random * (BIOLUMI_INTERVAL_MAX_MS - BIOLUMI_INTERVAL_MIN_MS);
+            float biolumi_cycle = fmodf(t + ((seed >> 6) & 0x1FFF), biolumi_interval);
+            
+            float biolumi_duration = BIOLUMI_DURATION_MIN_MS + ((biolumi_hash >> 8) % 1000) / 1000.0f * (BIOLUMI_DURATION_MAX_MS - BIOLUMI_DURATION_MIN_MS);
+            
+            if (biolumi_cycle < biolumi_duration) {
+              float biolumi_progress = biolumi_cycle / biolumi_duration;
+              float biolumi_intensity = sinf(biolumi_progress * 3.14159f);
+              
+              // Éclat violet-magenta
+              float violet_hue_random = ((biolumi_hash >> 16) % 1000) / 1000.0f;
+              hue = 265.0f + 15.0f * violet_hue_random; // violet variable (265° à 280°)
+              sat = 0.90f;
+              base_bri = 0.60f + 0.40f * biolumi_intensity;
+            }
+            
+            // Limitations
+            if (base_bri > 1.0f) base_bri = 1.0f;
+            if (base_bri < 0.02f) base_bri = 0.02f;
+            if (hue >= 360.0f) hue = fmodf(hue, 360.0f);
+            
+            it[0] = ESPHSVColor((uint8_t) hue, (uint8_t)(sat*255.0f), (uint8_t)(base_bri*255.0f));
       - addressable_lambda:
           name: "Ambiance Cheminée"
           update_interval: 120ms
@@ -678,17 +794,78 @@ light:
             it[0] = ESPHSVColor((uint8_t) hue, (uint8_t)(sat*255.0f), (uint8_t)(bri*255.0f));
       - addressable_lambda:
           name: "Ambiance Aquatique"
-          update_interval: 400ms
+          update_interval: 25ms
           lambda: |-
+            // === PARAMETRES CONFIGURABLES PORTE HAUT ===
+            const float CYAN_JUMP_INTERVAL_MIN_MS = 7000.0f;    // Intervalle min sauts cyan (ms)
+            const float CYAN_JUMP_INTERVAL_MAX_MS = 22000.0f;   // Intervalle max sauts cyan (ms)
+            const float CYAN_JUMP_DURATION_MIN_MS = 1100.0f;    // Durée min saut cyan (ms)
+            const float CYAN_JUMP_DURATION_MAX_MS = 3000.0f;    // Durée max saut cyan (ms)
+            
+            const float BIOLUMI_INTERVAL_MIN_MS = 20000.0f;     // Intervalle min éclats violets (ms)
+            const float BIOLUMI_INTERVAL_MAX_MS = 55000.0f;     // Intervalle max éclats violets (ms)
+            const float BIOLUMI_DURATION_MIN_MS = 700.0f;       // Durée min éclat violet (ms)
+            const float BIOLUMI_DURATION_MAX_MS = 1900.0f;      // Durée max éclat violet (ms)
+            
             const uint32_t t = millis();
             uint32_t seed = id(ambiance_seeds)[31] ^ 0xA55A5A5A;
             if (it.size() == 0) return;
+            
+            // Houle de base : vert d'eau vers bleu profond
             float slow = fmodf((t / 46500.0f) + ((seed & 0xFF) / 255.0f), 1.0f);
-            float hue = 165.0f + 75.0f * slow;
-            if (((seed >> 10) & 0x3F) == 5 && (t % 20000 < 1100)) hue = 268.0f;
+            float base_hue = 165.0f + 75.0f * slow; // 165-240° (vert d'eau vers bleu profond)
+            float hue = base_hue;
+            
+            // Saturation et luminosité de base
             float sat = 0.53f + 0.37f * (((seed >> 16) & 0xFF) / 255.0f);
-            float bri = 0.32f + 0.50f * (0.5f + 0.5f * sinf((t / 7200.0f) + (seed & 0x1F)));
-            it[0] = ESPHSVColor((uint8_t) hue, (uint8_t)(sat*255.0f), (uint8_t)(bri*255.0f));
+            float base_bri = 0.32f + 0.50f * (0.5f + 0.5f * sinf((t / 7200.0f) + (seed & 0x1F)));
+            
+            // === SAUTS CYAN ALEATOIRES ===
+            uint32_t cyan_hash = (t + seed * 1664525) ^ (seed >> 8);
+            float cyan_random = (cyan_hash % 1000) / 1000.0f;
+            
+            float cyan_interval = CYAN_JUMP_INTERVAL_MIN_MS + cyan_random * (CYAN_JUMP_INTERVAL_MAX_MS - CYAN_JUMP_INTERVAL_MIN_MS);
+            float cyan_cycle = fmodf(t + (seed & 0xFFF), cyan_interval);
+            
+            float cyan_duration = CYAN_JUMP_DURATION_MIN_MS + ((cyan_hash >> 8) % 1000) / 1000.0f * (CYAN_JUMP_DURATION_MAX_MS - CYAN_JUMP_DURATION_MIN_MS);
+            
+            if (cyan_cycle < cyan_duration) {
+              float cyan_progress = cyan_cycle / cyan_duration;
+              float cyan_intensity = 0.8f * sinf(cyan_progress * 3.14159f);
+              
+              // Saut vers cyan avec variations légèrement différentes
+              float cyan_hue_random = ((cyan_hash >> 16) % 1000) / 1000.0f;
+              hue = 175.0f + 30.0f * cyan_hue_random; // cyan variable (175° à 205°)
+              sat = 0.70f + 0.25f * cyan_intensity;
+              base_bri = 0.40f + 0.45f * (1.0f + cyan_intensity);
+            }
+            
+            // === ECLATS BIOLUMINESCENTS ALEATOIRES ===
+            uint32_t biolumi_hash = (t * 17 + seed * 2147483647) ^ (seed >> 10);
+            float biolumi_random = (biolumi_hash % 1000) / 1000.0f;
+            
+            float biolumi_interval = BIOLUMI_INTERVAL_MIN_MS + biolumi_random * (BIOLUMI_INTERVAL_MAX_MS - BIOLUMI_INTERVAL_MIN_MS);
+            float biolumi_cycle = fmodf(t + ((seed >> 8) & 0x1FFF), biolumi_interval);
+            
+            float biolumi_duration = BIOLUMI_DURATION_MIN_MS + ((biolumi_hash >> 8) % 1000) / 1000.0f * (BIOLUMI_DURATION_MAX_MS - BIOLUMI_DURATION_MIN_MS);
+            
+            if (biolumi_cycle < biolumi_duration) {
+              float biolumi_progress = biolumi_cycle / biolumi_duration;
+              float biolumi_intensity = sinf(biolumi_progress * 3.14159f);
+              
+              // Éclat violet-magenta avec nuance différente
+              float violet_hue_random = ((biolumi_hash >> 16) % 1000) / 1000.0f;
+              hue = 268.0f + 12.0f * violet_hue_random; // violet variable (268° à 280°)
+              sat = 0.88f;
+              base_bri = 0.55f + 0.45f * biolumi_intensity;
+            }
+            
+            // Limitations
+            if (base_bri > 1.0f) base_bri = 1.0f;
+            if (base_bri < 0.02f) base_bri = 0.02f;
+            if (hue >= 360.0f) hue = fmodf(hue, 360.0f);
+            
+            it[0] = ESPHSVColor((uint8_t) hue, (uint8_t)(sat*255.0f), (uint8_t)(base_bri*255.0f));
       - addressable_lambda:
           name: "Ambiance Cheminée"
           update_interval: 120ms
