@@ -248,6 +248,22 @@ switch:
           protocol: 1
           repeat: *repeat_rf
 
+button:
+  - platform: template
+    name: "Projecteur étoiles - moteur + vitesse"
+    on_press:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: "011001000001111000001010"
+          protocol: 1
+          repeat: *repeat_rf
+  - platform: template
+    name: "Projecteur étoiles - moteur - vitesse"
+    on_press:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: "011001000001111000001100"
+          protocol: 1
+          repeat: *repeat_rf
+
 select:
   - platform: template
     name: Durée projecteur étoiles
