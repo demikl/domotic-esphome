@@ -31,7 +31,7 @@ esphome:
           effect: &effet_par_defaut_ch1 "Bip bip 1"
       - light.turn_on:
           id: guirlande2
-          effect: &effet_par_defaut_ch2 "Arc-en-ciel"
+          effect: &effet_par_defaut_ch2 "Bip bip 1"
 
 esp32:
   board: az-delivery-devkit-v4
@@ -138,6 +138,67 @@ light:
     warm_white_color_temperature: &warm 500 Mireds
     effects: &effects
       - strobe:
+          name: "Bip bip 1"
+          colors:
+            # Phase 1 : alternance lente (5 répétitions = 10 étapes)
+            - {duration: 1s, transition_length: 0.1s, warm_white: 100%, cold_white: 20%}
+            - {duration: 1s, transition_length: 0.1s, warm_white: 20%, cold_white: 100%}
+            - {duration: 1s, transition_length: 0.1s, warm_white: 100%, cold_white: 20%}
+            - {duration: 1s, transition_length: 0.1s, warm_white: 20%, cold_white: 100%}
+            - {duration: 1s, transition_length: 0.1s, warm_white: 100%, cold_white: 20%}
+            - {duration: 1s, transition_length: 0.1s, warm_white: 20%, cold_white: 100%}
+            - {duration: 1s, transition_length: 0.1s, warm_white: 100%, cold_white: 20%}
+            - {duration: 1s, transition_length: 0.1s, warm_white: 20%, cold_white: 100%}
+            - {duration: 1s, transition_length: 0.1s, warm_white: 100%, cold_white: 20%}
+            - {duration: 1s, transition_length: 0.1s, warm_white: 20%, cold_white: 100%}
+            # Phase 2 : alternance moyenne (20 répétitions = 40 étapes)
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            # Phase 3 : alternance très rapide avec 4 états (50 répétitions = 200 étapes, mais limité pour la lisibilité)
+            # Note: le strobe boucle automatiquement, donc on peut réduire le nombre pour que ça soit gérable
+            - {duration: 0.1s, transition_length: 0.1s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.1s, transition_length: 0.1s, warm_white: 100%, cold_white: 100%}
+            - {duration: 0.1s, transition_length: 0.1s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.1s, transition_length: 0.1s, warm_white: 100%, cold_white: 100%}
+      - strobe:
           name: "Arc-en-ciel"
           colors:
             - duration: 10s
@@ -213,66 +274,6 @@ light:
               transition_length: 0.1s
               warm_white: 20%
               cold_white: 100%
-      - automation:
-          name: "Bip bip 1"
-          sequence:
-            - repeat:
-                count: 5
-                then:
-                  - light.turn_on:
-                      id: guirlande1
-                      transition_length: 0.1s
-                      warm_white: 100%
-                      cold_white: 20%
-                  - delay: 1s
-                  - light.turn_on:
-                      id: guirlande1
-                      transition_length: 0.1s
-                      warm_white: 20%
-                      cold_white: 100%
-                  - delay: 1s
-            - repeat:
-                count: 20
-                then:
-                  - light.turn_on:
-                      id: guirlande1
-                      transition_length: 0.2s
-                      warm_white: 100%
-                      cold_white: 20%
-                  - delay: 0.3s
-                  - light.turn_on:
-                      id: guirlande1
-                      transition_length: 0.2s
-                      warm_white: 20%
-                      cold_white: 100%
-                  - delay: 0.3s
-            - repeat:
-                count: 50
-                then:
-                  - light.turn_on:
-                      id: guirlande1
-                      transition_length: 0.1s
-                      warm_white: 100%
-                      cold_white: 20%
-                  - delay: 0.1s
-                  - light.turn_on:
-                      id: guirlande1
-                      transition_length: 0.1s
-                      warm_white: 100%
-                      cold_white: 100%
-                  - delay: 0.1s
-                  - light.turn_on:
-                      id: guirlande1
-                      transition_length: 0.1s
-                      warm_white: 20%
-                      cold_white: 100%
-                  - delay: 0.1s
-                  - light.turn_on:
-                      id: guirlande1
-                      transition_length: 0.1s
-                      warm_white: 100%
-                      cold_white: 100%
-                  - delay: 0.1s
   - platform: cwww
     name: "Guirlande 2"
     id: guirlande2
