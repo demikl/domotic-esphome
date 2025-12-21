@@ -196,8 +196,8 @@ light:
     id: guirlande1
     cold_white: channel1_pin1
     warm_white: channel1_pin2
-    cold_white_color_temperature: &cold 0 Mireds
-    warm_white_color_temperature: &warm 500 Mireds
+    cold_white_color_temperature: &cold 140 Mireds
+    warm_white_color_temperature: &warm 2500 Mireds
     effects: &effects
       - strobe:
           name: "Bip bip 1"
