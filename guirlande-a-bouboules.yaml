@@ -199,6 +199,65 @@ light:
             - {duration: 0.1s, transition_length: 0.1s, warm_white: 20%, cold_white: 100%}
             - {duration: 0.1s, transition_length: 0.1s, warm_white: 100%, cold_white: 100%}
       - strobe:
+          name: "Bip bip 2"
+          colors:
+            # Progression fluide : lent → rapide → lent
+            # Phase accélération (duration: 1s → 0.1s)
+            - {duration: 1.0s, transition_length: 0.5s, warm_white: 100%, cold_white: 20%}
+            - {duration: 1.0s, transition_length: 0.5s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.9s, transition_length: 0.45s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.9s, transition_length: 0.45s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.8s, transition_length: 0.4s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.8s, transition_length: 0.4s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.7s, transition_length: 0.35s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.7s, transition_length: 0.35s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.6s, transition_length: 0.3s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.6s, transition_length: 0.3s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.5s, transition_length: 0.25s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.5s, transition_length: 0.25s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.4s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.4s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.15s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.15s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.2s, transition_length: 0.1s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.2s, transition_length: 0.1s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 20%, cold_white: 100%}
+            # Phase rapide (maintien quelques cycles)
+            - {duration: 0.1s, transition_length: 0.05s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.1s, transition_length: 0.05s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.1s, transition_length: 0.05s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.1s, transition_length: 0.05s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.1s, transition_length: 0.05s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.1s, transition_length: 0.05s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.1s, transition_length: 0.05s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.1s, transition_length: 0.05s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.1s, transition_length: 0.05s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.1s, transition_length: 0.05s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.1s, transition_length: 0.05s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.1s, transition_length: 0.05s, warm_white: 20%, cold_white: 100%}
+            # Phase décélération (duration: 0.1s → 1s)
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.2s, transition_length: 0.1s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.2s, transition_length: 0.1s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.3s, transition_length: 0.15s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.3s, transition_length: 0.15s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.4s, transition_length: 0.2s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.4s, transition_length: 0.2s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.5s, transition_length: 0.25s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.5s, transition_length: 0.25s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.6s, transition_length: 0.3s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.6s, transition_length: 0.3s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.7s, transition_length: 0.35s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.7s, transition_length: 0.35s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.8s, transition_length: 0.4s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.8s, transition_length: 0.4s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.9s, transition_length: 0.45s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.9s, transition_length: 0.45s, warm_white: 20%, cold_white: 100%}
+            - {duration: 1.0s, transition_length: 0.5s, warm_white: 100%, cold_white: 20%}
+            - {duration: 1.0s, transition_length: 0.5s, warm_white: 20%, cold_white: 100%}
+      - strobe:
           name: "Arc-en-ciel"
           colors:
             - duration: 10s
