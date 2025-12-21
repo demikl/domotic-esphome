@@ -206,6 +206,7 @@ light:
           name: "_Desync_pause"
           colors:
             - {duration: 1s, warm_white: 50%, cold_white: 50%}
+            - {duration: 1s, warm_white: 50%, cold_white: 50%}
       - strobe:
           name: "Bip bip 1"
           colors:
