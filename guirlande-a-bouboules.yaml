@@ -74,15 +74,16 @@ script:
             // Probabilité de 20% de déclencher une désync
             if (random_float() < 0.2) {
               ESP_LOGD("desync", "Désynchronisation guirlande1");
-              // Pause brève de l'effet
+              // Pause brève via effet interne dédié
               auto call = id(guirlande1).turn_on();
-              call.set_effect("None");
+              call.set_effect("_Desync_pause");
               call.perform();
             }
           }
       - delay: !lambda "return random_float() * 300 + 100;"  # 100-400ms de pause
       - lambda: |-
-          if (id(guirlande1).get_effect_name() == "None" && id(guirlande1).current_values.is_on()) {
+          // Ne réactiver que si l'effet est toujours "_Desync_pause" (pas modifié par l'utilisateur)
+          if (id(guirlande1).get_effect_name() == "_Desync_pause" && id(guirlande1).current_values.is_on()) {
             auto call = id(guirlande1).turn_on();
             call.set_effect("Bip bip 2");
             call.perform();
@@ -97,15 +98,16 @@ script:
             // Probabilité de 20% de déclencher une désync
             if (random_float() < 0.2) {
               ESP_LOGD("desync", "Désynchronisation guirlande2");
-              // Pause brève de l'effet
+              // Pause brève via effet interne dédié
               auto call = id(guirlande2).turn_on();
-              call.set_effect("None");
+              call.set_effect("_Desync_pause");
               call.perform();
             }
           }
       - delay: !lambda "return random_float() * 300 + 100;"  # 100-400ms de pause
       - lambda: |-
-          if (id(guirlande2).get_effect_name() == "None" && id(guirlande2).current_values.is_on()) {
+          // Ne réactiver que si l'effet est toujours "_Desync_pause" (pas modifié par l'utilisateur)
+          if (id(guirlande2).get_effect_name() == "_Desync_pause" && id(guirlande2).current_values.is_on()) {
             auto call = id(guirlande2).turn_on();
             call.set_effect("Bip bip 2");
             call.perform();
@@ -199,6 +201,11 @@ light:
     cold_white_color_temperature: &cold 140 Mireds
     warm_white_color_temperature: &warm 2500 Mireds
     effects: &effects
+      # Effet interne utilisé pour la désynchronisation - ne pas utiliser directement
+      - strobe:
+          name: "_Desync_pause"
+          colors:
+            - {duration: 1s, warm_white: 50%, cold_white: 50%}
       - strobe:
           name: "Bip bip 1"
           colors:
