@@ -116,11 +116,11 @@ script:
 interval:
   # Intervalle de désynchronisation pour "Bip bip 2"
   # Intervalles différents pour chaque guirlande = désynchronisation naturelle
-  - interval: 2.3s  # Intervalle premier (non divisible par l'autre)
+  - interval: 23s  # Intervalle premier (non divisible par l'autre)
     then:
       - script.execute: desync_guirlande1
 
-  - interval: 3.1s  # Intervalle différent pour la 2ème guirlande
+  - interval: 31s  # Intervalle différent pour la 2ème guirlande
     then:
       - script.execute: desync_guirlande2
 
@@ -198,8 +198,6 @@ light:
     id: guirlande1
     cold_white: channel1_pin1
     warm_white: channel1_pin2
-    cold_white_color_temperature: &cold 140 Mireds
-    warm_white_color_temperature: &warm 2500 Mireds
     effects: &effects
       # Effet interne utilisé pour la désynchronisation - ne pas utiliser directement
       - strobe:
@@ -207,6 +205,16 @@ light:
           colors:
             - {duration: 1s, warm_white: 50%, cold_white: 50%}
             - {duration: 1s, warm_white: 50%, cold_white: 50%}
+      - strobe:
+          name: "Rouge et orange"
+          colors:
+            - {duration: 1s, warm_white: 100%, cold_white: 0%}
+            - {duration: 1s, warm_white: 100%, cold_white: 0%}
+      - strobe:
+          name: "Vert et bleu"
+          colors:
+            - {duration: 1s, warm_white: 0%, cold_white: 100%}
+            - {duration: 1s, warm_white: 0%, cold_white: 100%}
       - strobe:
           name: "Bip bip 1"
           colors:
@@ -272,7 +280,18 @@ light:
           name: "Bip bip 2"
           colors:
             # Progression fluide : lent → rapide → lent
-            # Phase accélération (duration: 1s → 0.1s)
+            # Phase très lente (duration: 3s → 1.2s)
+            - {duration: 3.0s, transition_length: 1.5s, warm_white: 100%, cold_white: 20%}
+            - {duration: 3.0s, transition_length: 1.5s, warm_white: 20%, cold_white: 100%}
+            - {duration: 2.5s, transition_length: 1.25s, warm_white: 100%, cold_white: 20%}
+            - {duration: 2.5s, transition_length: 1.25s, warm_white: 20%, cold_white: 100%}
+            - {duration: 2.0s, transition_length: 1.0s, warm_white: 100%, cold_white: 20%}
+            - {duration: 2.0s, transition_length: 1.0s, warm_white: 20%, cold_white: 100%}
+            - {duration: 1.5s, transition_length: 0.75s, warm_white: 100%, cold_white: 20%}
+            - {duration: 1.5s, transition_length: 0.75s, warm_white: 20%, cold_white: 100%}
+            - {duration: 1.2s, transition_length: 0.6s, warm_white: 100%, cold_white: 20%}
+            - {duration: 1.2s, transition_length: 0.6s, warm_white: 20%, cold_white: 100%}
+            # Phase accélération (duration: 1s → 0.15s)
             - {duration: 1.0s, transition_length: 0.5s, warm_white: 100%, cold_white: 20%}
             - {duration: 1.0s, transition_length: 0.5s, warm_white: 20%, cold_white: 100%}
             - {duration: 0.9s, transition_length: 0.45s, warm_white: 100%, cold_white: 20%}
@@ -294,19 +313,19 @@ light:
             - {duration: 0.15s, transition_length: 0.08s, warm_white: 100%, cold_white: 20%}
             - {duration: 0.15s, transition_length: 0.08s, warm_white: 20%, cold_white: 100%}
             # Phase rapide (maintien quelques cycles)
-            - {duration: 0.1s, transition_length: 0.05s, warm_white: 100%, cold_white: 20%}
-            - {duration: 0.1s, transition_length: 0.05s, warm_white: 20%, cold_white: 100%}
-            - {duration: 0.1s, transition_length: 0.05s, warm_white: 100%, cold_white: 20%}
-            - {duration: 0.1s, transition_length: 0.05s, warm_white: 20%, cold_white: 100%}
-            - {duration: 0.1s, transition_length: 0.05s, warm_white: 100%, cold_white: 20%}
-            - {duration: 0.1s, transition_length: 0.05s, warm_white: 20%, cold_white: 100%}
-            - {duration: 0.1s, transition_length: 0.05s, warm_white: 100%, cold_white: 20%}
-            - {duration: 0.1s, transition_length: 0.05s, warm_white: 20%, cold_white: 100%}
-            - {duration: 0.1s, transition_length: 0.05s, warm_white: 100%, cold_white: 20%}
-            - {duration: 0.1s, transition_length: 0.05s, warm_white: 20%, cold_white: 100%}
-            - {duration: 0.1s, transition_length: 0.05s, warm_white: 100%, cold_white: 20%}
-            - {duration: 0.1s, transition_length: 0.05s, warm_white: 20%, cold_white: 100%}
-            # Phase décélération (duration: 0.1s → 1s)
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 20%, cold_white: 100%}
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 100%, cold_white: 20%}
+            - {duration: 0.15s, transition_length: 0.08s, warm_white: 20%, cold_white: 100%}
+            # Phase décélération (duration: 0.15s → 3s)
             - {duration: 0.15s, transition_length: 0.08s, warm_white: 100%, cold_white: 20%}
             - {duration: 0.15s, transition_length: 0.08s, warm_white: 20%, cold_white: 100%}
             - {duration: 0.2s, transition_length: 0.1s, warm_white: 100%, cold_white: 20%}
@@ -327,6 +346,16 @@ light:
             - {duration: 0.9s, transition_length: 0.45s, warm_white: 20%, cold_white: 100%}
             - {duration: 1.0s, transition_length: 0.5s, warm_white: 100%, cold_white: 20%}
             - {duration: 1.0s, transition_length: 0.5s, warm_white: 20%, cold_white: 100%}
+            - {duration: 1.2s, transition_length: 0.6s, warm_white: 100%, cold_white: 20%}
+            - {duration: 1.2s, transition_length: 0.6s, warm_white: 20%, cold_white: 100%}
+            - {duration: 1.5s, transition_length: 0.75s, warm_white: 100%, cold_white: 20%}
+            - {duration: 1.5s, transition_length: 0.75s, warm_white: 20%, cold_white: 100%}
+            - {duration: 2.0s, transition_length: 1.0s, warm_white: 100%, cold_white: 20%}
+            - {duration: 2.0s, transition_length: 1.0s, warm_white: 20%, cold_white: 100%}
+            - {duration: 2.5s, transition_length: 1.25s, warm_white: 100%, cold_white: 20%}
+            - {duration: 2.5s, transition_length: 1.25s, warm_white: 20%, cold_white: 100%}
+            - {duration: 3.0s, transition_length: 1.5s, warm_white: 100%, cold_white: 20%}
+            - {duration: 3.0s, transition_length: 1.5s, warm_white: 20%, cold_white: 100%}
       - strobe:
           name: "Arc-en-ciel"
           colors:
@@ -408,8 +437,6 @@ light:
     id: guirlande2
     cold_white: channel2_pin1
     warm_white: channel2_pin2
-    cold_white_color_temperature: *cold
-    warm_white_color_temperature: *warm
     effects: *effects
 
 binary_sensor:
