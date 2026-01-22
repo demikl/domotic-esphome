@@ -8,15 +8,54 @@ Ce dépôt contient :
 
 Il est optimisé pour un **éclairage d’ambiance dans une salle de bain**, composé de :
 - **2 spots encastrés GU10 RGB**
-- chacun **pré‑flashé avec WLED**
-- les deux contrôlés via **une instance WLED principale**, grâce à **DDP**
-- 2 segments (un par spot), permettant à chaque spot de prendre une couleur différente
+- chacun **pré‑flashé avec WLED** (2 instances indépendantes)
+- même fichier de presets/playlists déployé sur les deux
 
-L’objectif :  
+L'objectif :  
 Créer une ambiance **relaxante, immersive, chaleureuse**, avec :
-- des **transitions lentes (7s)**
-- des **changements de couleur espacés (30 à 45s)**
+- des **transitions lentes (7s)** entre les états
+- des **changements de couleur espacés (20 à 45s)** via les playlists
 - un **flicker subtil**, adapté à la *matière* que la couleur évoque (feu, eau, terre…)
+- des **couleurs désynchronisées** entre les deux spots pour un rendu organique
+
+---
+
+# 🔄 Architecture : 2 instances WLED indépendantes
+
+Chaque spot GU10 a sa propre instance WLED. Pour obtenir un effet **désynchronisé mais cohérent** :
+
+1. **Même playlist** sur les deux instances → palette de couleurs cohérente
+2. **Shuffle activé** → ordre des presets aléatoire par instance
+3. **Durées variables** → les changements ne tombent jamais en même temps
+4. **Pas de DDP/Sync** → chaque spot évolue indépendamment
+
+### Synchronisation du changement de playlist
+
+Pour changer de playlist simultanément sur les deux spots :
+
+**Option 1 : Home Assistant** (recommandé)
+```yaml
+script:
+  wled_playlist_foret:
+    sequence:
+      - service: light.turn_on
+        target:
+          entity_id:
+            - light.wled_sdb_spot1
+            - light.wled_sdb_spot2
+        data:
+          effect: "Playlist: Foret Tropicale"
+```
+
+**Option 2 : API WLED directe**
+```bash
+# Appliquer la playlist 10 (Forêt) sur les deux spots
+curl "http://192.168.1.X/win&PL=10"
+curl "http://192.168.1.Y/win&PL=10"
+```
+
+**Option 3 : Bouton physique**
+Configurer un GPIO sur un des spots pour envoyer une requête HTTP à l'autre.
 
 ---
 
@@ -89,29 +128,40 @@ Paramètres :
 
 # ▶️ Playlists
 
+| ID | Nom | Presets |
+|----|-----|---------|
+| 10 | Forêt tropicale | 101–105 |
+| 11 | Bonbons | 201–205 |
+| 12 | Feu de cheminée | 301–305 |
+| 13 | Rouge Ambre Violet Turquoise | 401–405 |
+
 Chaque ambiance a sa propre playlist :
-- durée par preset : **30–45s**
-- transitions : **7s**
-- shuffle activé → rend chaque spot **indépendant et organique**
+- durée par preset : **20–45s** (en dixièmes de seconde dans le JSON)
+- transitions : **7s** (`transition: 700`)
+- boucle infinie activée (`repeat: 0`, `r: true`)
 
 ---
 
 # 📦 Fichier JSON
 
-Le fichier `presets_and_playlists.json` contient :
-- toutes les ambiances
-- toutes les playlists
-- les flickers adaptés
-- les transitions lentes
-- la configuration complète des couleurs
+Le fichier `presets_and_playlists.json` utilise le **format natif WLED** :
+- clés numériques = IDs des presets (`"101"`, `"102"`, etc.)
+- playlists aux IDs `10–13`
+- couleurs en **RGBW** `[R, G, B, W]` (W=0 pour RGB pur)
+- effet Candle Multi (`fx: 102`) avec `sx` (vitesse) et `ix` (intensité)
 
-Il est directement importable dans :
+### Import dans WLED (à faire sur chaque spot)
 
-> WLED → Presets → "Edit JSON"
+1. Aller dans **WLED → Config → Security & Updates**
+2. Section **Backup & Restore**
+3. Cliquer sur **Restore Presets** et sélectionner le fichier JSON
 
-et
-
-> WLED → Playlists → "Edit JSON"
+Alternativement, via l'API :
+```bash
+# Déployer sur les deux spots
+curl -X POST "http://<IP_SPOT1>/presets.json" -d @presets_and_playlists.json
+curl -X POST "http://<IP_SPOT2>/presets.json" -d @presets_and_playlists.json
+```
 
 ---
 

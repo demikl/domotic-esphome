@@ -1,275 +1,47 @@
 
 {
-  "p": [
-    /* ============================================================
-       FORÊT TROPICALE — flicker adapté à l'eau, au feuillage, à la terre
-       ============================================================ */
-    {
-      "id": 101,
-      "on": true,
-      "bri": 140,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 2,
-      "ix": 1,
-      "seg": [{"col": [[10,40,20]]}]
-    },
-    {
-      "id": 102,
-      "on": true,
-      "bri": 160,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 2,
-      "ix": 2,
-      "seg": [{"col": [[20,80,40]]}]
-    },
-    {
-      "id": 103,
-      "on": true,
-      "bri": 170,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 3,
-      "ix": 2,
-      "seg": [{"col": [[0,120,90]]}]
-    },
-    {
-      "id": 104,
-      "on": true,
-      "bri": 180,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 4,
-      "ix": 3,
-      "seg": [{"col": [[0,180,160]]}]
-    },
-    {
-      "id": 105,
-      "on": true,
-      "bri": 120,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 1,
-      "ix": 0,
-      "seg": [{"col": [[90,60,20]]}]
-    },
-
-    /* ============================================================
-       BONBONS & SUCRERIES — flicker léger façon lumières colorées
-       ============================================================ */
-    {
-      "id": 201,
-      "on": true,
-      "bri": 200,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 3,
-      "ix": 1,
-      "seg": [{"col": [[255,100,180]]}]
-    },
-    {
-      "id": 202,
-      "on": true,
-      "bri": 190,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 3,
-      "ix": 2,
-      "seg": [{"col": [[150,200,255]]}]
-    },
-    {
-      "id": 203,
-      "on": true,
-      "bri": 210,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 2,
-      "ix": 1,
-      "seg": [{"col": [[255,230,120]]}]
-    },
-    {
-      "id": 204,
-      "on": true,
-      "bri": 180,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 3,
-      "ix": 2,
-      "seg": [{"col": [[120,255,200]]}]
-    },
-    {
-      "id": 205,
-      "on": true,
-      "bri": 200,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 3,
-      "ix": 1,
-      "seg": [{"col": [[200,120,255]]}]
-    },
-
-    /* ============================================================
-       FEU DE CHEMINÉE — flicker fort inspiré des flammes et braises
-       ============================================================ */
-    {
-      "id": 301,
-      "on": true,
-      "bri": 130,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 5,
-      "ix": 4,
-      "seg": [{"col": [[255,80,20]]}]
-    },
-    {
-      "id": 302,
-      "on": true,
-      "bri": 110,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 4,
-      "ix": 3,
-      "seg": [{"col": [[200,40,10]]}]
-    },
-    {
-      "id": 303,
-      "on": true,
-      "bri": 150,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 4,
-      "ix": 3,
-      "seg": [{"col": [[255,140,40]]}]
-    },
-    {
-      "id": 304,
-      "on": true,
-      "bri": 100,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 3,
-      "ix": 2,
-      "seg": [{"col": [[150,30,5]]}]
-    },
-    {
-      "id": 305,
-      "on": true,
-      "bri": 140,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 4,
-      "ix": 3,
-      "seg": [{"col": [[255,110,20]]}]
-    },
-
-    /* ============================================================
-       ROUGE — AMBRE — VIOLET — TURQUOISE — flicker selon matière
-       ============================================================ */
-    {
-      "id": 401,
-      "on": true,
-      "bri": 160,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 4,
-      "ix": 3,
-      "seg": [{"col": [[255,40,40]]}]
-    },
-    {
-      "id": 402,
-      "on": true,
-      "bri": 150,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 4,
-      "ix": 3,
-      "seg": [{"col": [[255,150,40]]}]
-    },
-    {
-      "id": 403,
-      "on": true,
-      "bri": 170,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 3,
-      "ix": 1,
-      "seg": [{"col": [[160,60,255]]}]
-    },
-    {
-      "id": 404,
-      "on": true,
-      "bri": 170,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 4,
-      "ix": 3,
-      "seg": [{"col": [[40,200,255]]}]
-    },
-    {
-      "id": 405,
-      "on": true,
-      "bri": 150,
-      "transition": 7000,
-      "fx": 102,
-      "sx": 3,
-      "ix": 2,
-      "seg": [{"col": [[200,20,120]]}]
-    }
-  ],
-
-  "pl": [
-    {
-      "id": 1,
-      "name": "Forêt tropicale",
-      "pl": [
-        { "ps": 101, "dur": 35 },
-        { "ps": 102, "dur": 40 },
-        { "ps": 103, "dur": 30 },
-        { "ps": 104, "dur": 35 },
-        { "ps": 105, "dur": 45 }
-      ],
-      "repeat": 0,
-      "shuffle": true
-    },
-    {
-      "id": 2,
-      "name": "Bonbons",
-      "pl": [
-        { "ps": 201, "dur": 30 },
-        { "ps": 202, "dur": 35 },
-        { "ps": 203, "dur": 25 },
-        { "ps": 204, "dur": 40 },
-        { "ps": 205, "dur": 30 }
-      ],
-      "repeat": 0,
-      "shuffle": true
-    },
-    {
-      "id": 3,
-      "name": "Feu de cheminée",
-      "pl": [
-        { "ps": 301, "dur": 30 },
-        { "ps": 302, "dur": 25 },
-        { "ps": 303, "dur": 40 },
-        { "ps": 304, "dur": 20 },
-        { "ps": 305, "dur": 35 }
-      ],
-      "repeat": 0,
-      "shuffle": true
-    },
-    {
-      "id": 4,
-      "name": "Rouge Ambre Violet Turquoise",
-      "pl": [
-        { "ps": 401, "dur": 30 },
-        { "ps": 402, "dur": 25 },
-        { "ps": 403, "dur": 40 },
-        { "ps": 404, "dur": 35 },
-        { "ps": 405, "dur": 30 }
-      ],
-      "repeat": 0,
-      "shuffle": true
-    }
-  ]
+  "0": {},
+  "1": {
+    "n": "Blends",
+    "on": true,
+    "bri": 255,
+    "transition": 700,
+    "seg": [{"col": [[255, 160, 0, 0]], "fx": 117, "sx": 1, "ix": 56, "pal": 46}]
+  },
+  "10": {
+    "n": "Playlist: Foret Tropicale",
+    "playlist": {"ps": [101, 102, 103, 104, 105], "dur": [350, 400, 300, 350, 450], "transition": 700, "repeat": 0, "r": true}
+  },
+  "11": {
+    "n": "Playlist: Bonbons",
+    "playlist": {"ps": [201, 202, 203, 204, 205], "dur": [300, 350, 250, 400, 300], "transition": 700, "repeat": 0, "r": true}
+  },
+  "12": {
+    "n": "Playlist: Feu Cheminee",
+    "playlist": {"ps": [301, 302, 303, 304, 305], "dur": [300, 250, 400, 200, 350], "transition": 700, "repeat": 0, "r": true}
+  },
+  "13": {
+    "n": "Playlist: Rouge Ambre Violet Turquoise",
+    "playlist": {"ps": [401, 402, 403, 404, 405], "dur": [300, 250, 400, 350, 300], "transition": 700, "repeat": 0, "r": true}
+  },
+  "101": {"n": "Feuillage dense", "on": true, "bri": 140, "transition": 700, "seg": [{"col": [[10, 40, 20, 0]], "fx": 102, "sx": 2, "ix": 1}]},
+  "102": {"n": "Feuillage eclaire", "on": true, "bri": 160, "transition": 700, "seg": [{"col": [[20, 80, 40, 0]], "fx": 102, "sx": 2, "ix": 2}]},
+  "103": {"n": "Eau stagnante", "on": true, "bri": 170, "transition": 700, "seg": [{"col": [[0, 120, 90, 0]], "fx": 102, "sx": 3, "ix": 2}]},
+  "104": {"n": "Eau en mouvement", "on": true, "bri": 180, "transition": 700, "seg": [{"col": [[0, 180, 160, 0]], "fx": 102, "sx": 4, "ix": 3}]},
+  "105": {"n": "Terre Tronc", "on": true, "bri": 120, "transition": 700, "seg": [{"col": [[90, 60, 20, 0]], "fx": 102, "sx": 1, "ix": 0}]},
+  "201": {"n": "Rose sucre", "on": true, "bri": 200, "transition": 700, "seg": [{"col": [[255, 100, 180, 0]], "fx": 102, "sx": 3, "ix": 1}]},
+  "202": {"n": "Bleu pastel", "on": true, "bri": 190, "transition": 700, "seg": [{"col": [[150, 200, 255, 0]], "fx": 102, "sx": 3, "ix": 2}]},
+  "203": {"n": "Jaune doux", "on": true, "bri": 210, "transition": 700, "seg": [{"col": [[255, 230, 120, 0]], "fx": 102, "sx": 2, "ix": 1}]},
+  "204": {"n": "Menthe", "on": true, "bri": 180, "transition": 700, "seg": [{"col": [[120, 255, 200, 0]], "fx": 102, "sx": 3, "ix": 2}]},
+  "205": {"n": "Violet candy", "on": true, "bri": 200, "transition": 700, "seg": [{"col": [[200, 120, 255, 0]], "fx": 102, "sx": 3, "ix": 1}]},
+  "301": {"n": "Flamme vive", "on": true, "bri": 130, "transition": 700, "seg": [{"col": [[255, 80, 20, 0]], "fx": 102, "sx": 5, "ix": 4}]},
+  "302": {"n": "Braise", "on": true, "bri": 110, "transition": 700, "seg": [{"col": [[200, 40, 10, 0]], "fx": 102, "sx": 4, "ix": 3}]},
+  "303": {"n": "Flamme moyenne", "on": true, "bri": 150, "transition": 700, "seg": [{"col": [[255, 140, 40, 0]], "fx": 102, "sx": 4, "ix": 3}]},
+  "304": {"n": "Charbon", "on": true, "bri": 100, "transition": 700, "seg": [{"col": [[150, 30, 5, 0]], "fx": 102, "sx": 3, "ix": 2}]},
+  "305": {"n": "Flamme moderee", "on": true, "bri": 140, "transition": 700, "seg": [{"col": [[255, 110, 20, 0]], "fx": 102, "sx": 4, "ix": 3}]},
+  "401": {"n": "Chaleur", "on": true, "bri": 160, "transition": 700, "seg": [{"col": [[255, 40, 40, 0]], "fx": 102, "sx": 4, "ix": 3}]},
+  "402": {"n": "Flamme Ambre", "on": true, "bri": 150, "transition": 700, "seg": [{"col": [[255, 150, 40, 0]], "fx": 102, "sx": 4, "ix": 3}]},
+  "403": {"n": "Lumiere artificielle", "on": true, "bri": 170, "transition": 700, "seg": [{"col": [[160, 60, 255, 0]], "fx": 102, "sx": 3, "ix": 1}]},
+  "404": {"n": "Eau lumineuse", "on": true, "bri": 170, "transition": 700, "seg": [{"col": [[40, 200, 255, 0]], "fx": 102, "sx": 4, "ix": 3}]},
+  "405": {"n": "Lumiere decorative", "on": true, "bri": 150, "transition": 700, "seg": [{"col": [[200, 20, 120, 0]], "fx": 102, "sx": 3, "ix": 2}]}
 }
