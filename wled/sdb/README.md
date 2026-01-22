@@ -82,11 +82,11 @@ Paramètres :
 
 | Preset | Couleur | Matière | Flicker |
 |--------|---------|----------|---------|
-| 101 | Vert sombre | Feuillage dense | Léger (sx2 ix1) |
-| 102 | Vert clair | Feuillage éclairé | Léger (sx2 ix2) |
-| 103 | Bleu‑vert | Eau stagnante | Moyen (sx3 ix2) |
-| 104 | Turquoise | Eau en mouvement | Moyen-fort (sx4 ix3) |
-| 105 | Brun | Terre / tronc | Très faible (sx1 ix0) |
+| 1 | Vert sombre | Feuillage dense | Léger (sx2 ix1) |
+| 2 | Vert clair | Feuillage éclairé | Léger (sx2 ix2) |
+| 3 | Bleu‑vert | Eau stagnante | Moyen (sx3 ix2) |
+| 4 | Turquoise | Eau en mouvement | Moyen-fort (sx4 ix3) |
+| 5 | Brun | Terre / tronc | Très faible (sx1 ix0) |
 
 ---
 
@@ -94,11 +94,11 @@ Paramètres :
 
 | Preset | Couleur | Matière symbolique | Flicker |
 |--------|---------|--------------------|---------|
-| 201 | Rose sucré | Lumière néon | Léger |
-| 202 | Bleu pastel | Glow froid | Léger-moyen |
-| 203 | Jaune doux | Bonbon translucide | Léger |
-| 204 | Menthe | Liquide mentholé | Moyen |
-| 205 | Violet candy | LED décorative | Léger |
+| 6 | Rose sucré | Lumière néon | Léger |
+| 7 | Bleu pastel | Glow froid | Léger-moyen |
+| 8 | Jaune doux | Bonbon translucide | Léger |
+| 9 | Menthe | Liquide mentholé | Moyen |
+| 10 | Violet candy | LED décorative | Léger |
 
 ---
 
@@ -106,11 +106,11 @@ Paramètres :
 
 | Preset | Couleur | Matière | Flicker |
 |--------|---------|----------|---------|
-| 301 | Ambre vif | Flamme vive | Fort |
-| 302 | Rouge sombre | Braise | Fort |
-| 303 | Ambre clair | Flamme moyenne | Fort |
-| 304 | Rouge brun | Charbon | Moyen |
-| 305 | Ambre orangé | Flamme modérée | Fort |
+| 11 | Ambre vif | Flamme vive | Fort |
+| 12 | Rouge sombre | Braise | Fort |
+| 13 | Ambre clair | Flamme moyenne | Fort |
+| 14 | Rouge brun | Charbon | Moyen |
+| 15 | Ambre orangé | Flamme modérée | Fort |
 
 ---
 
@@ -118,11 +118,11 @@ Paramètres :
 
 | Preset | Couleur | Matière | Flicker |
 |--------|---------|----------|---------|
-| 401 | Rouge | Chaleur | Moyen-fort |
-| 402 | Ambre | Flamme | Fort |
-| 403 | Violet | Lumière artificielle | Faible |
-| 404 | Turquoise | Eau lumineuse | Fort |
-| 405 | Magenta | Lumière décorative | Moyen |
+| 16 | Rouge | Chaleur | Moyen-fort |
+| 17 | Ambre | Flamme | Fort |
+| 18 | Violet | Lumière artificielle | Faible |
+| 19 | Turquoise | Eau lumineuse | Fort |
+| 20 | Magenta | Lumière décorative | Moyen |
 
 ---
 
@@ -130,10 +130,10 @@ Paramètres :
 
 | ID | Nom | Presets |
 |----|-----|---------|
-| 10 | Forêt tropicale | 101–105 |
-| 11 | Bonbons | 201–205 |
-| 12 | Feu de cheminée | 301–305 |
-| 13 | Rouge Ambre Violet Turquoise | 401–405 |
+| 10 | Forêt tropicale | 1–5 |
+| 11 | Bonbons | 6–10 |
+| 12 | Feu de cheminée | 11–15 |
+| 13 | Rouge Ambre Violet Turquoise | 16–20 |
 
 Chaque ambiance a sa propre playlist :
 - durée par preset : **20–45s** (en dixièmes de seconde dans le JSON)
@@ -145,8 +145,8 @@ Chaque ambiance a sa propre playlist :
 # 📦 Fichier JSON
 
 Le fichier `presets_and_playlists.json` utilise le **format natif WLED** :
-- clés numériques = IDs des presets (`"101"`, `"102"`, etc.)
-- playlists aux IDs `10–13`
+- clés numériques = IDs des presets (`"1"` à `"20"`)
+- playlists aux IDs `100–103`
 - couleurs en **RGBW** `[R, G, B, W]` (W=0 pour RGB pur)
 - effet Candle Multi (`fx: 102`) avec `sx` (vitesse) et `ix` (intensité)
 

@@ -1,47 +1,39 @@
 
 {
-  "0": {},
-  "1": {
-    "n": "Blends",
-    "on": true,
-    "bri": 255,
-    "transition": 700,
-    "seg": [{"col": [[255, 160, 0, 0]], "fx": 117, "sx": 1, "ix": 56, "pal": 46}]
-  },
-  "10": {
+  "100": {
     "n": "Playlist: Foret Tropicale",
-    "playlist": {"ps": [101, 102, 103, 104, 105], "dur": [350, 400, 300, 350, 450], "transition": 700, "repeat": 0, "r": true}
+    "playlist": {"ps": [1, 2, 3, 4, 5], "dur": [350, 400, 300, 300, 450], "transition": 70, "repeat": 0, "r": true}
   },
-  "11": {
+  "101": {
     "n": "Playlist: Bonbons",
-    "playlist": {"ps": [201, 202, 203, 204, 205], "dur": [300, 350, 250, 400, 300], "transition": 700, "repeat": 0, "r": true}
+    "playlist": {"ps": [6, 7, 8, 9, 10], "dur": [300, 350, 250, 400, 300], "transition": 70, "repeat": 0, "r": true}
   },
-  "12": {
+  "102": {
     "n": "Playlist: Feu Cheminee",
-    "playlist": {"ps": [301, 302, 303, 304, 305], "dur": [300, 250, 400, 200, 350], "transition": 700, "repeat": 0, "r": true}
+    "playlist": {"ps": [11, 12, 13, 14, 15], "dur": [300, 250, 400, 200, 350], "transition": 70, "repeat": 0, "r": true}
   },
-  "13": {
+  "103": {
     "n": "Playlist: Rouge Ambre Violet Turquoise",
-    "playlist": {"ps": [401, 402, 403, 404, 405], "dur": [300, 250, 400, 350, 300], "transition": 700, "repeat": 0, "r": true}
+    "playlist": {"ps": [16, 17, 18, 19, 20], "dur": [300, 250, 400, 350, 300], "transition": 70, "repeat": 0, "r": true}
   },
-  "101": {"n": "Feuillage dense", "on": true, "bri": 140, "transition": 700, "seg": [{"col": [[10, 40, 20, 0]], "fx": 102, "sx": 2, "ix": 1}]},
-  "102": {"n": "Feuillage eclaire", "on": true, "bri": 160, "transition": 700, "seg": [{"col": [[20, 80, 40, 0]], "fx": 102, "sx": 2, "ix": 2}]},
-  "103": {"n": "Eau stagnante", "on": true, "bri": 170, "transition": 700, "seg": [{"col": [[0, 120, 90, 0]], "fx": 102, "sx": 3, "ix": 2}]},
-  "104": {"n": "Eau en mouvement", "on": true, "bri": 180, "transition": 700, "seg": [{"col": [[0, 180, 160, 0]], "fx": 102, "sx": 4, "ix": 3}]},
-  "105": {"n": "Terre Tronc", "on": true, "bri": 120, "transition": 700, "seg": [{"col": [[90, 60, 20, 0]], "fx": 102, "sx": 1, "ix": 0}]},
-  "201": {"n": "Rose sucre", "on": true, "bri": 200, "transition": 700, "seg": [{"col": [[255, 100, 180, 0]], "fx": 102, "sx": 3, "ix": 1}]},
-  "202": {"n": "Bleu pastel", "on": true, "bri": 190, "transition": 700, "seg": [{"col": [[150, 200, 255, 0]], "fx": 102, "sx": 3, "ix": 2}]},
-  "203": {"n": "Jaune doux", "on": true, "bri": 210, "transition": 700, "seg": [{"col": [[255, 230, 120, 0]], "fx": 102, "sx": 2, "ix": 1}]},
-  "204": {"n": "Menthe", "on": true, "bri": 180, "transition": 700, "seg": [{"col": [[120, 255, 200, 0]], "fx": 102, "sx": 3, "ix": 2}]},
-  "205": {"n": "Violet candy", "on": true, "bri": 200, "transition": 700, "seg": [{"col": [[200, 120, 255, 0]], "fx": 102, "sx": 3, "ix": 1}]},
-  "301": {"n": "Flamme vive", "on": true, "bri": 130, "transition": 700, "seg": [{"col": [[255, 80, 20, 0]], "fx": 102, "sx": 5, "ix": 4}]},
-  "302": {"n": "Braise", "on": true, "bri": 110, "transition": 700, "seg": [{"col": [[200, 40, 10, 0]], "fx": 102, "sx": 4, "ix": 3}]},
-  "303": {"n": "Flamme moyenne", "on": true, "bri": 150, "transition": 700, "seg": [{"col": [[255, 140, 40, 0]], "fx": 102, "sx": 4, "ix": 3}]},
-  "304": {"n": "Charbon", "on": true, "bri": 100, "transition": 700, "seg": [{"col": [[150, 30, 5, 0]], "fx": 102, "sx": 3, "ix": 2}]},
-  "305": {"n": "Flamme moderee", "on": true, "bri": 140, "transition": 700, "seg": [{"col": [[255, 110, 20, 0]], "fx": 102, "sx": 4, "ix": 3}]},
-  "401": {"n": "Chaleur", "on": true, "bri": 160, "transition": 700, "seg": [{"col": [[255, 40, 40, 0]], "fx": 102, "sx": 4, "ix": 3}]},
-  "402": {"n": "Flamme Ambre", "on": true, "bri": 150, "transition": 700, "seg": [{"col": [[255, 150, 40, 0]], "fx": 102, "sx": 4, "ix": 3}]},
-  "403": {"n": "Lumiere artificielle", "on": true, "bri": 170, "transition": 700, "seg": [{"col": [[160, 60, 255, 0]], "fx": 102, "sx": 3, "ix": 1}]},
-  "404": {"n": "Eau lumineuse", "on": true, "bri": 170, "transition": 700, "seg": [{"col": [[40, 200, 255, 0]], "fx": 102, "sx": 4, "ix": 3}]},
-  "405": {"n": "Lumiere decorative", "on": true, "bri": 150, "transition": 700, "seg": [{"col": [[200, 20, 120, 0]], "fx": 102, "sx": 3, "ix": 2}]}
+  "1": {"n": "Feuillage dense", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[10, 40, 20, 0]], "fx": 88, "sx": 2, "ix": 1}]},
+  "2": {"n": "Feuillage eclaire", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[20, 80, 40, 0]], "fx": 88, "sx": 2, "ix": 2}]},
+  "3": {"n": "Eau stagnante", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[0, 120, 90, 0]], "fx": 88, "sx": 3, "ix": 2}]},
+  "4": {"n": "Eau en mouvement", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[0, 180, 160, 0]], "fx": 88, "sx": 4, "ix": 3}]},
+  "5": {"n": "Terre Tronc", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[90, 60, 20, 0]], "fx": 88, "sx": 1, "ix": 0}]},
+  "6": {"n": "Rose sucre", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[255, 100, 180, 0]], "fx": 88, "sx": 3, "ix": 1}]},
+  "7": {"n": "Bleu pastel", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[150, 200, 255, 0]], "fx": 88, "sx": 3, "ix": 2}]},
+  "8": {"n": "Jaune doux", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[255, 230, 120, 0]], "fx": 88, "sx": 2, "ix": 1}]},
+  "9": {"n": "Menthe", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[120, 255, 200, 0]], "fx": 88, "sx": 3, "ix": 2}]},
+  "10": {"n": "Violet candy", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[200, 120, 255, 0]], "fx": 88, "sx": 3, "ix": 1}]},
+  "11": {"n": "Flamme vive", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[255, 80, 20, 0]], "fx": 88, "sx": 5, "ix": 4}]},
+  "12": {"n": "Braise", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[200, 40, 10, 0]], "fx": 88, "sx": 4, "ix": 3}]},
+  "13": {"n": "Flamme moyenne", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[255, 140, 40, 0]], "fx": 88, "sx": 4, "ix": 3}]},
+  "14": {"n": "Charbon", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[150, 30, 5, 0]], "fx": 88, "sx": 3, "ix": 2}]},
+  "15": {"n": "Flamme moderee", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[255, 110, 20, 0]], "fx": 88, "sx": 4, "ix": 3}]},
+  "16": {"n": "Chaleur", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[255, 40, 40, 0]], "fx": 88, "sx": 4, "ix": 3}]},
+  "17": {"n": "Flamme Ambre", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[255, 150, 40, 0]], "fx": 88, "sx": 4, "ix": 3}]},
+  "18": {"n": "Lumiere artificielle", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[160, 60, 255, 0]], "fx": 88, "sx": 3, "ix": 1}]},
+  "19": {"n": "Eau lumineuse", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[40, 200, 255, 0]], "fx": 88, "sx": 4, "ix": 3}]},
+  "20": {"n": "Lumiere decorative", "on": true, "bri": 255, "transition": 700, "seg": [{"col": [[200, 20, 120, 0]], "fx": 88, "sx": 3, "ix": 2}]}
 }
