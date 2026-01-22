@@ -69,7 +69,7 @@ Chaque couleur est associée à une *matière* :
 - 🍬 couleurs “candy / néon” → flicker léger  
 - 🌈 couleurs spa → variable
 
-Le flicker est réalisé via l’effet **WLED Candle Multi (fx = 102)**,  
+Le flicker est réalisé via l’effet **WLED Candle (fx = 88)**,  
 car chaque LED reçoit son propre pattern indépendant — parfait pour deux pixels distincts.
 
 Paramètres :
@@ -148,7 +148,7 @@ Le fichier `presets_and_playlists.json` utilise le **format natif WLED** :
 - clés numériques = IDs des presets (`"1"` à `"20"`)
 - playlists aux IDs `100–103`
 - couleurs en **RGBW** `[R, G, B, W]` (W=0 pour RGB pur)
-- effet Candle Multi (`fx: 102`) avec `sx` (vitesse) et `ix` (intensité)
+- effet Candle (`fx: 88`) avec `sx` (vitesse) et `ix` (intensité)
 
 ### Import dans WLED (à faire sur chaque spot)
 
