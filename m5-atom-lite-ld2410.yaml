@@ -14,10 +14,6 @@ packages:
 esp32:
   #board: m5stack-atom
   board: m5stack-core-esp32
-  # Le package M5 utilise FastLED : conserver Arduino explicitement, y compris
-  # avec les versions ESPHome recentes dont le framework par defaut a change.
-  framework:
-    type: arduino
 
 wifi:
   manual_ip:
@@ -35,10 +31,12 @@ logger:
 
 
 api:
-  services:
+  encryption:
+    key: !secret m5_lite_ld2410__encryption_key
+  actions:
     # Ne modifie pas display_active : horloge/veille retrouvent leur etat
     # reel apres le message, meme si un flash de presence a expire entretemps.
-    - service: display_mode
+    - action: display_mode
       variables:
         mode: string
       then:
@@ -54,7 +52,7 @@ api:
                   level: WARN
                   format: "Mode salon invalide : %s"
                   args: ['mode.c_str()']
-    - service: remote_ir_rc5
+    - action: remote_ir_rc5
       variables:
         address: int
         command: int
