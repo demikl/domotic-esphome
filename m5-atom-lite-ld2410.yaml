@@ -11,6 +11,14 @@ packages:
   m5lite: !include common/m5-atom-lite.yaml
   ld2410: !include common/ld2410.yaml
 
+esp32:
+  #board: m5stack-atom
+  board: m5stack-core-esp32
+  # Le package M5 utilise FastLED : conserver Arduino explicitement, y compris
+  # avec les versions ESPHome recentes dont le framework par defaut a change.
+  framework:
+    type: arduino
+
 wifi:
   manual_ip:
     # pour une connection rapide, et pour que le conteneur docker esphome puisse trouver l'ESP sans mDNS
@@ -28,6 +36,24 @@ logger:
 
 api:
   services:
+    # Ne modifie pas display_active : horloge/veille retrouvent leur etat
+    # reel apres le message, meme si un flash de presence a expire entretemps.
+    - service: display_mode
+      variables:
+        mode: string
+      then:
+        - if:
+            condition:
+              lambda: 'return mode == "On" || mode == "Off" || mode == "AUtO";'
+            then:
+              - script.execute:
+                  id: display_mode_message
+                  message: !lambda 'return mode;'
+            else:
+              - logger.log:
+                  level: WARN
+                  format: "Mode salon invalide : %s"
+                  args: ['mode.c_str()']
     - service: remote_ir_rc5
       variables:
         address: int
@@ -58,6 +84,10 @@ number:
     step: 1
 
 globals:
+  - id: display_message
+    type: std::string
+    restore_value: no
+    initial_value: '""'
   - id: display_active
     type: bool
     restore_value: no
@@ -97,6 +127,15 @@ switch:
           active: false
 
 script:
+  # Une nouvelle bascule remplace le message et relance ses cinq secondes.
+  - id: display_mode_message
+    mode: restart
+    parameters:
+      message: string
+    then:
+      - lambda: 'id(display_message) = message;'
+      - delay: 5s
+      - lambda: 'id(display_message).clear();'
   # allume l'afficheur 7 segments pendant un temps court
   # il ne fait que déclencher un script background, ce qui permet depuis ce script de vérifier si le background est déjà lancé
   - id: display_flash
@@ -163,6 +202,13 @@ display:
   lambda: |-
       static int i = 0;
       i++;
+      // Priorite d'affichage uniquement ; les scripts de veille restent actifs.
+      if (!id(display_message).empty()) {
+        it.set_on(true);
+        it.set_intensity(id(display_luminosity).state);
+        it.print(id(display_message).c_str());
+        return;
+      }
       if (id(display_active))
       {
         it.set_on(true);
