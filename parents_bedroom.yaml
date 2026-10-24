@@ -19,6 +19,10 @@ esphome:
 esp32:
   board: nodemcu-32s
 
+api:
+  encryption:
+    key: !secret parents_bedroom__encryption_key
+
 wifi:
   manual_ip:
     # pour une connection rapide, et pour que le conteneur docker esphome puisse trouver l'ESP sans mDNS
@@ -56,6 +60,18 @@ output:
     type: float
     write_action: []
 
+globals:
+  # 0: JUMP3, 1: JUMP7, 2: FADE3, 3: FADE7, 4: FLASH, 5: AUTO
+  - id: ir_animation_mode
+    type: int
+    initial_value: '0'
+  - id: ir_animation_period
+    type: int
+    initial_value: '1000'
+  - id: ir_animation_paused
+    type: bool
+    initial_value: 'false'
+
 light:
   - platform: rgb
     red: red
@@ -68,6 +84,61 @@ light:
       - <<: !include common/light_effect_alarme.yaml
       - random
       - flicker
+      - lambda:
+          name: Telecommande
+          update_interval: 50ms
+          lambda: |-
+            static const float palette[7][3] = {
+              {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f},
+              {1.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f},
+              {1.0f, 1.0f, 1.0f}
+            };
+            static int previous_mode = -1;
+            static int color = 0;
+            static int next_color = 1;
+            static float phase = 0.0f;
+            static uint32_t previous_time = 0;
+            const uint32_t now = millis();
+            const int mode = id(ir_animation_mode);
+            const bool reset = initial_run || mode != previous_mode;
+            const uint32_t elapsed = reset ? 0 : now - previous_time;
+            previous_time = now;
+            if (reset) {
+              previous_mode = mode;
+              color = 0;
+              next_color = 1;
+              phase = 0.0f;
+            }
+            if (id(ir_animation_paused))
+              return;
+            const int count = mode == 4 ? 2 : ((mode == 0 || mode == 2) ? 3 : 7);
+            phase += static_cast<float>(elapsed) / id(ir_animation_period);
+            while (phase >= 1.0f) {
+              phase -= 1.0f;
+              color = next_color;
+              next_color = mode == 5
+                ? (color + 1 + random_uint32() % 6) % 7
+                : (color + 1) % count;
+            }
+            float rgb[3];
+            for (int channel = 0; channel < 3; channel++) {
+              if (mode == 4) {
+                rgb[channel] = color == 0 ? 1.0f : 0.0f;
+              } else {
+                const float blend = mode >= 2 ? phase : 0.0f;
+                rgb[channel] = palette[color][channel] * (1.0f - blend)
+                             + palette[next_color][channel] * blend;
+              }
+            }
+            auto call = it.turn_on();
+            call.set_rgb(rgb[0], rgb[1], rgb[2]);
+            // RGB noir est normalise en blanc par ESPHome : eteindre le canal couleur.
+            call.set_color_brightness(mode == 4 && color == 1
+              ? 0.0f : it.remote_values.get_color_brightness());
+            call.set_transition_length(0);
+            call.set_publish(false);
+            call.set_save(false);
+            call.perform();
     on_turn_on:
       # gradually auto turn-off the light after some time
       - delay: 5min
@@ -92,6 +163,30 @@ light:
     restore_mode: RESTORE_AND_ON
 
 script:
+  - id: ir_set_color
+    parameters:
+      red: float
+      green: float
+      blue: float
+    then:
+      - light.turn_on:
+          id: bed_head_ledstrip
+          effect: None
+          red: !lambda return red;
+          green: !lambda return green;
+          blue: !lambda return blue;
+
+  - id: ir_start_animation
+    parameters:
+      animation: int
+    then:
+      - lambda: |-
+          id(ir_animation_mode) = animation;
+          id(ir_animation_paused) = false;
+      - light.turn_on:
+          id: bed_head_ledstrip
+          effect: Telecommande
+
   - id: ledstrip_warning_going_to_be_saved
     then:
       while:
@@ -166,8 +261,8 @@ binary_sensor:
     on_multi_click:
       # simple clic
       - timing:
-        - ON for at most 0.35s
-        - OFF for at least 0.1s
+        - ON for at most 1s
+        - OFF for at least 0.5s
         then:
           - logger.log: "simple clic"
           - if:
@@ -185,9 +280,9 @@ binary_sensor:
                     blue: !lambda return id(light_preset_soso).remote_values.get_blue();
       # double clic
       - timing:
-        - ON for 0.05s to 0.35s
+        - ON for 0.05s to 1s
         - OFF for 0.05s to 0.5s
-        - ON for 0.05s to 0.35s
+        - ON for 0.05s to 1s
         - OFF for at least 0.5s
         then:
           - logger.log: "double clic"
@@ -285,8 +380,8 @@ binary_sensor:
     on_multi_click:
       # simple clic
       - timing:
-        - ON for at most 0.35s
-        - OFF for at least 0.1s
+        - ON for at most 1s
+        - OFF for at least 0.5s
         then:
           - logger.log: "simple clic"
           - if:
@@ -304,9 +399,9 @@ binary_sensor:
                     blue: !lambda return id(light_preset_mick).remote_values.get_blue();
       # double clic
       - timing:
-        - ON for 0.05s to 0.35s
+        - ON for 0.05s to 1s
         - OFF for 0.05s to 0.5s
-        - ON for 0.05s to 0.35s
+        - ON for 0.05s to 1s
         - OFF for at least 0.5s
         then:
           - logger.log: "double clic"
@@ -485,6 +580,183 @@ binary_sensor:
             effect: None
 
   - platform: remote_receiver
+    id: ir_orange_red
+    lg:
+      data: 0x00FF2AD5
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 1.0
+          green: 0.125
+          blue: 0.0
+  - platform: remote_receiver
+    id: ir_lime
+    lg:
+      data: 0x00FFAA55
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 0.25
+          green: 1.0
+          blue: 0.0
+  - platform: remote_receiver
+    id: ir_sky_blue
+    lg:
+      data: 0x00FF926D
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 0.0
+          green: 0.5
+          blue: 1.0
+  - platform: remote_receiver
+    id: ir_pink_white
+    lg:
+      data: 0x00FF12ED
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 1.0
+          green: 0.65
+          blue: 0.8
+  - platform: remote_receiver
+    id: ir_orange
+    lg:
+      data: 0x00FF0AF5
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 1.0
+          green: 0.25
+          blue: 0.0
+  - platform: remote_receiver
+    id: ir_turquoise
+    lg:
+      data: 0x00FF8A75
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 0.0
+          green: 1.0
+          blue: 0.5
+  - platform: remote_receiver
+    id: ir_purple
+    lg:
+      data: 0x00FFB24D
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 0.5
+          green: 0.0
+          blue: 1.0
+  - platform: remote_receiver
+    id: ir_rose_white
+    lg:
+      data: 0x00FF32CD
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 1.0
+          green: 0.5
+          blue: 0.65
+  - platform: remote_receiver
+    id: ir_amber
+    lg:
+      data: 0x00FF38C7
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 1.0
+          green: 0.5
+          blue: 0.0
+  - platform: remote_receiver
+    id: ir_cyan
+    lg:
+      data: 0x00FFB847
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 0.0
+          green: 1.0
+          blue: 1.0
+  - platform: remote_receiver
+    id: ir_magenta
+    lg:
+      data: 0x00FF7887
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 1.0
+          green: 0.0
+          blue: 1.0
+  - platform: remote_receiver
+    id: ir_blue_white
+    lg:
+      data: 0x00FFF807
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 0.65
+          green: 0.8
+          blue: 1.0
+  - platform: remote_receiver
+    id: ir_yellow
+    lg:
+      data: 0x00FF18E7
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 1.0
+          green: 1.0
+          blue: 0.0
+  - platform: remote_receiver
+    id: ir_teal
+    lg:
+      data: 0x00FF9867
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 0.0
+          green: 1.0
+          blue: 0.75
+  - platform: remote_receiver
+    id: ir_deep_pink
+    lg:
+      data: 0x00FF58A7
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 1.0
+          green: 0.0
+          blue: 0.5
+  - platform: remote_receiver
+    id: ir_cyan_white
+    lg:
+      data: 0x00FFD827
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_set_color
+          red: 0.65
+          green: 1.0
+          blue: 1.0
+
+  - platform: remote_receiver
     id: ir_red_up
     lg:
       data: 0x00FF28D7
@@ -495,7 +767,8 @@ binary_sensor:
             id: bed_head_ledstrip
             red: !lambda |-
               float current = id(bed_head_ledstrip).remote_values.get_red();
-              return current + 0.1;
+              return esphome::clamp(current + 0.1f, 0.0f, 1.0f);
+            effect: None
   - platform: remote_receiver
     id: ir_red_down
     lg:
@@ -508,6 +781,7 @@ binary_sensor:
             red: !lambda |-
               float current = id(bed_head_ledstrip).remote_values.get_red();
               return esphome::clamp(current - 0.1f, 0.0f, 1.0f);
+            effect: None
   - platform: remote_receiver
     id: ir_green_up
     lg:
@@ -520,6 +794,7 @@ binary_sensor:
             green: !lambda |-
               float current = id(bed_head_ledstrip).remote_values.get_green();
               return esphome::clamp(current + 0.1f, 0.0f, 1.0f);
+            effect: None
   - platform: remote_receiver
     id: ir_green_down
     lg:
@@ -532,6 +807,7 @@ binary_sensor:
             green: !lambda |-
               float current = id(bed_head_ledstrip).remote_values.get_green();
               return esphome::clamp(current - 0.1f, 0.0f, 1.0f);
+            effect: None
   - platform: remote_receiver
     id: ir_blue_up
     lg:
@@ -544,6 +820,7 @@ binary_sensor:
             blue: !lambda |-
               float current = id(bed_head_ledstrip).remote_values.get_blue();
               return esphome::clamp(current + 0.1f, 0.0f, 1.0f);
+            effect: None
   - platform: remote_receiver
     id: ir_blue_down
     lg:
@@ -556,6 +833,68 @@ binary_sensor:
             blue: !lambda |-
               float current = id(bed_head_ledstrip).remote_values.get_blue();
               return esphome::clamp(current - 0.1f, 0.0f, 1.0f);
+            effect: None
+  - platform: remote_receiver
+    id: ir_quick
+    lg:
+      data: 0x00FFE817
+      nbits: 32
+    on_press:
+      - lambda: |-
+          id(ir_animation_period) = esphome::clamp(id(ir_animation_period) - 100, 100, 5000);
+  - platform: remote_receiver
+    id: ir_slow
+    lg:
+      data: 0x00FFC837
+      nbits: 32
+    on_press:
+      - lambda: |-
+          id(ir_animation_period) = esphome::clamp(id(ir_animation_period) + 100, 100, 5000);
+  - platform: remote_receiver
+    id: ir_flash
+    lg:
+      data: 0x00FFD02F
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_start_animation
+          animation: 4
+  - platform: remote_receiver
+    id: ir_jump3
+    lg:
+      data: 0x00FF20DF
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_start_animation
+          animation: 0
+  - platform: remote_receiver
+    id: ir_jump7
+    lg:
+      data: 0x00FFA05F
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_start_animation
+          animation: 1
+  - platform: remote_receiver
+    id: ir_fade3
+    lg:
+      data: 0x00FF609F
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_start_animation
+          animation: 2
+  - platform: remote_receiver
+    id: ir_fade7
+    lg:
+      data: 0x00FFE01F
+      nbits: 32
+    on_press:
+      - script.execute:
+          id: ir_start_animation
+          animation: 3
   - platform: remote_receiver
     id: ir_auto
     lg:
@@ -566,15 +905,16 @@ binary_sensor:
         - if:
             condition:
               lambda: |-
-                return id(bed_head_ledstrip).get_effect_name() == "Random";
+                return id(bed_head_ledstrip).get_effect_name() == "Telecommande"
+                    && id(ir_animation_mode) == 5;
             then:
               - light.turn_on:
                   id: bed_head_ledstrip
                   effect: None
             else:
-              - light.turn_on:
-                  id: bed_head_ledstrip
-                  effect: Random
+              - script.execute:
+                  id: ir_start_animation
+                  animation: 5
   - platform: remote_receiver
     id: ir_play
     lg:
@@ -585,15 +925,14 @@ binary_sensor:
         - if:
             condition:
               lambda: |-
-                return id(bed_head_ledstrip).get_effect_name() == "Flicker";
+                return id(bed_head_ledstrip).get_effect_name() == "Telecommande";
             then:
-              - light.turn_on:
-                  id: bed_head_ledstrip
-                  effect: None
+              - lambda: |-
+                  id(ir_animation_paused) = !id(ir_animation_paused);
             else:
-              - light.turn_on:
-                  id: bed_head_ledstrip
-                  effect: Flicker
+              - script.execute:
+                  id: ir_start_animation
+                  animation: !lambda return id(ir_animation_mode);
 
 remote_receiver:
   pin:
