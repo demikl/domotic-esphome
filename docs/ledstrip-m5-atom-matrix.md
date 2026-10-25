@@ -1,4 +1,39 @@
-# LED Strip Matrix - Effets d'Ambiance Asynchrones
+# Bureau : signal de réunion et éclairage d'ambiance
+
+[Retour au dépôt](README.md) · [Configuration ESPHome](ledstrip-m5-atom-matrix.yaml)
+
+## Usage principal : statut de réunion
+
+Installé dans le bureau, ce M5 Atom Matrix commande deux bandeaux RGB qui
+encadrent chacun un vitrage de la porte vitrée. Leur combinaison de couleurs
+indique le statut de réunion : microphone en écoute et/ou webcam en captation.
+
+**Il ne s'agit pas de deux LED physiques ni de rubans à pixels adressables.**
+Chaque bandeau contient plusieurs dizaines de LED RGB commandées ensemble :
+toutes prennent la même couleur. Les deux contrôleurs P9813 sont adressables
+séparément et apparaissent donc comme deux pixels logiques dans ESPHome.
+Les partitions `porte_bas` (index 0) et `porte_haut` (index 1) permettent de
+commander chaque bandeau indépendamment.
+
+Le YAML expose les lumières, mais ne détecte pas lui-même l'activité du
+microphone ou de la webcam et ne définit pas la correspondance des couleurs.
+Cette logique relève du pilotage externe, non inclus dans ce dépôt.
+La matrice intégrée de 25 LED reste, elle, réellement adressable pixel par pixel.
+
+## Commandes et ambiances disponibles
+
+En complément du signal de réunion, cinq boutons logiciels appliquent un effet
+à la matrice et aux deux bandeaux : **Ambiance Forêt**, **Ambiance Aquatique**,
+**Ambiance Cheminée**, **Forêt Lumineuse** et **Forêt Scintillante**.
+Un autre bouton éteint les trois lumières.
+
+Les graines aléatoires sont initialisées au démarrage ; les calculs d'effets
+locaux utilisent des décalages et des périodes différentes pour faire évoluer
+les lumières sans une synchronisation systématique. Le bouton physique GPIO39
+est exposé comme capteur, sans action locale définie dans ce YAML.
+
+Les sections ci-dessous conservent les notes d'implémentation des ambiances.
+Les extraits illustratifs ne remplacent pas la configuration YAML, qui fait foi.
 
 ## 📋 Description du Projet
 
@@ -8,9 +43,9 @@ Ce projet ESPHome contrôle un ensemble de lumières RGB connectées à un ESP32
 
 - **Microcontrôleur** : ESP32 M5 Atom Matrix (pico32)
 - **Matrice LED** : 25 LEDs WS2812 (5x5) sur GPIO27
-- **Strip LED** : 2 LEDs P9813 via SPI (MOSI: GPIO25, CLK: GPIO21)
-  - LED 0 : "Porte bas"  
-  - LED 1 : "Porte haut"
+- **Bandeaux RGB non adressables** : 2 contrôleurs P9813 via SPI (MOSI: GPIO25, CLK: GPIO21)
+  - Pixel logique 0 : bandeau entier "Porte bas"
+  - Pixel logique 1 : bandeau entier "Porte haut"
 - **Bouton** : GPIO39 (inversé)
 - **Réseau** : IP fixe 192.168.1.206
 
@@ -38,27 +73,24 @@ globals:
 
 Les seeds sont générées au démarrage avec `esp_random()` et attribuées selon :
 
-- **Matrice LED** : Indices 0-24 (une seed par LED)
-- **Porte bas** : Indice 30 + XOR fixe
-- **Porte haut** : Indice 31 + XOR différent
+- **Matrice LED** : indices dérivés du pixel selon l'effet
+- **Porte bas** : indice 30, avec un XOR pour certains effets
+- **Porte haut** : indice 31, avec un XOR pour certains effets
 
 ### Pourquoi Appliquer un XOR sur les Seeds ?
 
-Le XOR (`^`) est appliqué sur les seeds des partitions pour **garantir l'unicité** des séquences pseudo-aléatoires :
+Certains effets appliquent un XOR (`^`) pour obtenir une variante de la seed
+de chaque partition. Par exemple, pour l'ambiance aquatique :
 
 ```cpp
 uint32_t seed = id(ambiance_seeds)[30] ^ 0xA55A5A5A;  // Porte bas
-uint32_t seed = id(ambiance_seeds)[31] ^ 0x55AA55AA;  // Porte haut
+uint32_t seed = id(ambiance_seeds)[31] ^ 0xA55A5A5A;  // Porte haut
 ```
 
-**Problème sans XOR** : Si deux LEDs utilisent la même seed de base, elles produiraient des séquences identiques, créant une synchronisation indésirable.
-
-**Solution XOR** :
-
-- Mélange les bits de façon déterministe mais complexe
-- Garantit que même des seeds proches donnent des résultats très différents
-- Les constantes `0xA55A5A5A` et `0x55AA55AA` sont choisies pour maximiser la dispersion binaire
-- Permet de réutiliser une seed de base tout en créant des variantes uniques
+Le XOR transforme les bits de façon déterministe ; il ne garantit ni l'unicité
+des seeds entre partitions ni l'indépendance des séquences. La diversité repose
+aussi sur les indices distincts, les décalages et les périodes propres à chaque
+lumière. L'effet Forêt utilise directement les seeds, sans XOR.
 
 ## 🌲 Effet "Ambiance Forêt"
 
@@ -88,16 +120,6 @@ La variable `slow` est la **fonction temporelle normalisée** qui détermine la 
 **Effet combiné de `slow` et `zone_cycle`** :
 
 ```cpp
-```cpp
-// Logique Forêt avec transitions
-auto zone_cycle = fmod((seeds[i] + millis() * 0.00001) * 2.0, 3.0);
-uint16_t hue;
-if (zone_cycle < 1.0) {
-  // Ambre (35°) → Mousse (80°)
-  hue = 35 + (80-35) * zone_cycle;
-} else if (zone_cycle < 2.0) {
-  // Mousse (80°) → Vert (130°)  
-```cpp
 // Logique Forêt avec transitions
 auto zone_cycle = fmod((seeds[i] + millis() * 0.00001) * 2.0, 3.0);
 uint16_t hue;
@@ -118,12 +140,12 @@ if (zone_cycle < 1.0) {
 
 - **`slow` (60s)** : Modulation fine de chaque gamme de couleur
 - **`zone_cycle` (3 min)** : Transition majeure entre les 3 zones colorimètriques
-- **Transitions sinusoïdales** : `0.5f + 0.5f * sinf()` crée des passages fluides (courbe en S)
+- **Modulation sinusoïdale** : le mélange des teintes suit les expressions définies dans le YAML
 
 **Avantages pour peu de LEDs** :
 
 - Chaque LED visite **toutes les gammes** au lieu d'être figée dans une seule
-- **Variété maximisée** même avec 2-3 LEDs seulement
+- **Variété de couleurs** même avec seulement deux bandeaux commandés globalement
 - Transitions douces pour des changements esthétiques
 
 **Système de Zones avec Transitions** :
@@ -160,15 +182,15 @@ L'effet utilise un **cycle de zones à 3 minutes** (`zone_cycle`) qui fait passe
 **Pourquoi l'effet paraît fluide** :
 
 - La période de 60s fait que `slow` varie très peu entre deux updates (300ms)
-- Variation de `slow` par update : ≈ 0.0083 (soit ~0.8% du cycle)
-- Sur la gamme de teinte (ex: 80°→130°), cela représente ≈ 0.4° par update
+- Variation de `slow` par update : 300 / 60 000 = 0,005 (soit 0,5 % du cycle)
 - **Résultat** : L'œil perçoit un mouvement continu alors que ce sont des steps discrets très fins
 
 ### Résultat Visuel de la Forêt
 
 **Promenade temporelle en forêt** : Chaque LED traverse lentement tous les aspects d'un environnement forestier - du sous-bois ambré aux mousses dorées, jusqu'au feuillage vert profond, puis retour cyclique.
 
-**Optimisé pour peu de LEDs** : Même avec 2-3 LEDs seulement, l'effet reste riche grâce aux transitions fluides entre toutes les gammes colorimètriques, évitant la monotonie des affectations fixes.
+**Adapté à deux bandeaux** : chaque bandeau parcourt les gammes colorimétriques
+dans son ensemble, sans animation spatiale entre les LED physiques du ruban.
 
 ## 🌊 Effet "Ambiance Aquatique"
 
@@ -366,7 +388,7 @@ Base végétale stable (verts naturels) ponctuée d'événements lumineux totale
 
 ## 🎯 Points Techniques Avancés
 
-### Désynchronisation Garantie
+### Mécanismes de désynchronisation
 
 **Mécanismes anti-synchronisation** :
 
@@ -380,7 +402,7 @@ Base végétale stable (verts naturels) ponctuée d'événements lumineux totale
 **Fréquences d'update configurées** :
 
 - Forêt : 300ms (effet lent, économise le CPU)
-- Aquatique : 400ms (houle lente)
+- Aquatique : 25ms (pulsations et éclats)
 - Cheminée : 120ms (flicker rapide nécessaire)
 - Forêt Lumineuse : 200ms (rayons et éclats fréquents)
 - Forêt Scintillante : 25ms (capture micro-événements randomisés)
