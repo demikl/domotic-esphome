@@ -11,11 +11,11 @@ remote_transmitter:
     id: ir_transmitter
 
 light:
-  - platform: fastled_clockless
-    chipset: WS2812B
+  - platform: esp32_rmt_led_strip
+    chipset: WS2812
     pin: 27
     num_leds: 1
-    rgb_order: GRB
+    channel_colors: GRB
     id: neo
     name: Button Light
     effects:

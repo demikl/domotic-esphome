@@ -1,7 +1,7 @@
 ---
 api:
-  services:
-    - service: set_ld2410_bluetooth_password
+  actions:
+    - action: set_ld2410_bluetooth_password
       variables:
         password: string
       then:

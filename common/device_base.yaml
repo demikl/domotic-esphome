@@ -26,11 +26,19 @@ logger:
   #level: VERBOSE
   #level: VERY_VERBOSE
 
-api:
+# API section specified on each device
+# so that the encryption key can be specified individually for each device
+#api:
+# encryption:
+#   key: !secret <devicename>__encryption_key
 
 ota:
   - platform: esphome
-    password: !secret ota_password
+    # password for OTA updates was used previously, now using encryption key
+    #password: !secret ota_password
+    encryption:
+    # plaintext may be used the first time for OTA updates when encryption key is not yet set
+    #  allow_plaintext_upload: true
 
 switch:
   - platform: restart
